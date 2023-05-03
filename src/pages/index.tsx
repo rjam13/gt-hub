@@ -5,7 +5,11 @@ import Link from 'next/link';
 import { Fragment } from 'react';
 import type { AppRouter } from '~/server/routers/_app';
 
+import { useSession, signIn, signOut } from 'next-auth/react';
+
 const IndexPage: NextPageWithLayout = () => {
+  const { data: session } = useSession();
+
   const utils = trpc.useContext();
   const postsQuery = trpc.post.list.useInfiniteQuery(
     {
@@ -35,6 +39,17 @@ const IndexPage: NextPageWithLayout = () => {
 
   return (
     <>
+      {session ? (
+        <>
+          Signed in as {session?.user?.email} <br />
+          <button onClick={() => signOut()}>Sign out</button>
+        </>
+      ) : (
+        <>
+          Not signed in <br />
+          <button onClick={() => signIn()}>Sign in</button>
+        </>
+      )}
       <h1>Welcome to your tRPC starter!</h1>
       <p>
         If you get stuck, check <a href="https://trpc.io">the docs</a>, write a
@@ -45,12 +60,10 @@ const IndexPage: NextPageWithLayout = () => {
         </a>
         .
       </p>
-
       <h2>
         Latest Posts
         {postsQuery.status === 'loading' && '(loading)'}
       </h2>
-
       <button
         onClick={() => postsQuery.fetchPreviousPage()}
         disabled={
@@ -63,7 +76,6 @@ const IndexPage: NextPageWithLayout = () => {
           ? 'Load More'
           : 'Nothing more to load'}
       </button>
-
       {postsQuery.data?.pages.map((page, index) => (
         <Fragment key={page.items[0]?.id || index}>
           {page.items.map((item) => (
@@ -74,11 +86,8 @@ const IndexPage: NextPageWithLayout = () => {
           ))}
         </Fragment>
       ))}
-
       <hr />
-
       <h3>Add a Post</h3>
-
       <form
         onSubmit={async (e) => {
           /**
