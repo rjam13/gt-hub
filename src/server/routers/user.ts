@@ -1,47 +1,66 @@
 import { router, publicProcedure } from '../trpc';
-import { Prisma } from '@prisma/client';
-import { TRPCError } from '@trpc/server';
-import { z } from 'zod';
-import { prisma } from '~/server/prisma';
-import sha256 from 'crypto-js/sha256';
 import { logger } from '~/utils/logger';
-import { omit } from 'lodash';
-
-/**
- * Default selector for Post.
- * It's important to always explicitly say which fields you want to return in order to not leak extra information
- * @see https://github.com/prisma/prisma/issues/9353
- */
-const defaultUserSelect = Prisma.validator<Prisma.UserSelect>()({
-  id: true,
-  name: true,
-  email: true,
-  image: true,
-  password: true,
-});
+import { userCreateSchema } from '~/schemas/userSchema';
+import { hashPassword } from '~/utils/user';
+import * as trpc from '@trpc/server';
 
 export const userRouter = router({
-  checkCredentials: publicProcedure
-    .input(
-      z.object({
-        username: z.string(), // THERE SHOULD BE SOME MIN AND MAX CONSTRAINTS HERE
-        password: z.string(), // THERE SHOULD BE SOME MIN AND MAX CONSTRAINTS HERE
-      }),
-    )
-    .query(async ({ input }) => {
-      const user = await prisma.user.findUnique({
-        where: { name: input.username },
-        select: defaultUserSelect,
+  create: publicProcedure
+    .input(userCreateSchema)
+    .mutation(async ({ input, ctx }) => {
+      const { name, email, password } = input;
+      // checking for duplicates
+      const emailExists = await ctx.prisma.user.findFirst({
+        where: { email },
       });
-      if (user && user.password == sha256(input.password).toString()) {
-        logger.debug('password correct');
-        return omit(user, 'password');
-      } else {
-        logger.debug('incorrect credentials');
-        throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: `No user with username '${input.username}'`,
+      const nameExists = await ctx.prisma.user.findFirst({
+        where: { name },
+      });
+      if (emailExists) {
+        throw new trpc.TRPCError({
+          code: 'CONFLICT',
+          message: 'User with that email already exists.',
         });
       }
+      if (nameExists) {
+        throw new trpc.TRPCError({
+          code: 'CONFLICT',
+          message: 'User already exists.',
+        });
+      }
+      const userData = {
+        ...input,
+        password: hashPassword(password),
+      };
+      logger.debug('creating user', userData);
+      const user = await ctx.prisma.user.create({
+        data: userData,
+      });
+      return {
+        status: 201,
+        message: 'Account created successfully',
+        result: user.email,
+      };
     }),
+  // Below is not used anymore as user validation is
+  // done in the authorize function in [...nextauth].ts.
+  // This is still here in case a better solution is found involving trpc.
+  // checkCredentials: publicProcedure
+  //   .input(checkCredentialsSchema)
+  //   .query(async ({ input }) => {
+  //     const user = await prisma.user.findUnique({
+  //       where: { name: input.name },
+  //       select: defaultUserSelect,
+  //     });
+  //     if (user && user.password == hashPassword(input.password)) {
+  //       logger.debug('password correct');
+  //       return omit(user, 'password');
+  //     } else {
+  //       logger.debug('incorrect credentials');
+  //       throw new TRPCError({
+  //         code: 'NOT_FOUND',
+  //         message: `No user with name '${input.name}'`,
+  //       });
+  //     }
+  //   }),
 });

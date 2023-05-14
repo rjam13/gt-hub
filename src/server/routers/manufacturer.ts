@@ -1,11 +1,9 @@
 import { router, publicProcedure } from '../trpc';
 import { Prisma } from '@prisma/client';
-import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
-import { prisma } from '~/server/prisma';
 
 /**
- * Default selector for Post.
+ * Default selector for manufacturer.
  * It's important to always explicitly say which fields you want to return in order to not leak extra information
  * @see https://github.com/prisma/prisma/issues/9353
  */
@@ -32,8 +30,8 @@ export const manufacturerRouter = router({
         headquarters: z.string().min(1).max(64),
       }),
     )
-    .mutation(async ({ input }) => {
-      const manufacturer = await prisma.manufacturer.create({
+    .mutation(async ({ input, ctx }) => {
+      const manufacturer = await ctx.prisma.manufacturer.create({
         data: input,
         select: defaultManufacturerSelect,
       });

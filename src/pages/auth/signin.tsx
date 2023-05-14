@@ -1,60 +1,76 @@
-import React, { useEffect, useState } from 'react';
-import {
-  ClientSafeProvider,
-  getProviders,
-  signIn,
-  useSession,
-} from 'next-auth/react';
+import React from 'react';
+import { Controller, useForm } from 'react-hook-form';
+import { getProviders, signIn } from 'next-auth/react';
 import { useRouter } from 'next/router';
 import { InferGetServerSidePropsType } from 'next';
+import { logger } from '~/utils/logger';
+import {
+  ICheckCredentials,
+  checkCredentialsSchema,
+} from '~/schemas/userSchema';
+import { useCallback } from 'react';
+import { zodResolver } from '@hookform/resolvers/zod';
+
+// https://github.com/FranciscoMendes10866/next-auth-trpc-prisma/blob/main/src/pages/index.tsx
 
 const SignIn = ({
   providers,
 }: InferGetServerSidePropsType<typeof getServerSideProps>) => {
-  const { data: session } = useSession();
   const router = useRouter();
-  useEffect(() => {
-    if (session) {
-      router.push('/');
-    }
-  }, [router, session]);
-  const [userInfo, setUserInfo] = useState({ username: '', password: '' });
+  const { handleSubmit, control, reset } = useForm<ICheckCredentials>({
+    defaultValues: {
+      name: '',
+      password: '',
+    },
+    resolver: zodResolver(checkCredentialsSchema),
+  });
 
-  // console.log(providers);
+  // const defaultBody = {
+  //   grant_type: '',
+  //   username: 'asdf',
+  //   scope: '',
+  //   client_id: '',
+  //   client_secret: '',
+  // };
+
+  const onSubmit = useCallback(
+    async (data: ICheckCredentials) => {
+      try {
+        // const body = { ...defaultBody, userData: { ...data } };
+        // console.log(`POSTing ${JSON.stringify(body, null, 2)}`);
+        const res = await signIn('credentials', {
+          ...data,
+          callbackUrl: router.query.callbackUrl as string,
+        });
+        logger.debug(`signing:onsubmit:res`, res);
+        reset();
+      } catch (error) {
+        logger.error(error);
+      }
+    },
+    [reset, router.query.callbackUrl],
+  );
+
   return (
     <div>
       <h1>Sign In</h1>
-      <div>
-        <form
-          onSubmit={async (e) => {
-            e.preventDefault();
-            const res = await signIn('credentials', {
-              redirect: false,
-              username: userInfo.username,
-              password: userInfo.password,
-            });
-            console.log(res);
-          }}
-        >
-          <input
-            value={userInfo.username}
-            onChange={({ target }) => {
-              setUserInfo({ ...userInfo, username: target.value });
-            }}
-            type="username"
-            placeholder="username"
-          />
-          <input
-            value={userInfo.password}
-            onChange={({ target }) => {
-              setUserInfo({ ...userInfo, password: target.value });
-            }}
-            type="password"
-            placeholder="password"
-          />
-          <input type="submit" value="Login" />
-        </form>
-      </div>
+      <form onSubmit={handleSubmit(onSubmit)}>
+        <Controller
+          name="name"
+          control={control}
+          render={({ field }) => (
+            <input type="text" placeholder="username" {...field} />
+          )}
+        />
+        <Controller
+          name="password"
+          control={control}
+          render={({ field }) => (
+            <input type="password" placeholder="password" {...field} />
+          )}
+        />
+        <input type="submit" value="Sign In" />
+      </form>
       <h3>OR</h3>
       {providers != null ? (
         Object.values(providers).map((provider) => {

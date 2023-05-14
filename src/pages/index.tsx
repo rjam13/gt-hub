@@ -2,10 +2,18 @@ import { trpc } from '../utils/trpc';
 import { NextPageWithLayout } from './_app';
 import { inferProcedureInput } from '@trpc/server';
 import Link from 'next/link';
-import { Fragment } from 'react';
+import {
+  Fragment,
+  JSXElementConstructor,
+  Key,
+  ReactElement,
+  ReactFragment,
+  ReactPortal,
+} from 'react';
 import type { AppRouter } from '~/server/routers/_app';
 
 import { useSession, signIn, signOut } from 'next-auth/react';
+import { apiBaseUrl } from 'next-auth/client/_utils';
 
 const IndexPage: NextPageWithLayout = () => {
   const { data: session } = useSession();
@@ -17,7 +25,7 @@ const IndexPage: NextPageWithLayout = () => {
       limit: 5,
     },
     {
-      getPreviousPageParam(lastPage) {
+      getPreviousPageParam(lastPage: { items: any; nextCursor: any }) {
         return lastPage.nextCursor;
       },
     },
@@ -49,13 +57,23 @@ const IndexPage: NextPageWithLayout = () => {
     <>
       {session ? (
         <>
-          Signed in as {session?.user?.email} <br />
+          Signed in as {session?.user?.name} <br />
           <button onClick={() => signOut()}>Sign out</button>
         </>
       ) : (
         <>
           Not signed in <br />
           <button onClick={() => signIn()}>Sign in</button>
+          <button
+            onClick={() => {
+              const callbackUrl = window.location.href;
+              window.location.href = `/auth/signup?${new URLSearchParams({
+                callbackUrl,
+              })}`;
+            }}
+          >
+            Sign up
+          </button>
         </>
       )}
 
@@ -87,12 +105,25 @@ const IndexPage: NextPageWithLayout = () => {
       </button>
       {postsQuery.data?.pages.map((page, index) => (
         <Fragment key={page.items[0]?.id || index}>
-          {page.items.map((item) => (
-            <article key={item.id}>
-              <h3>{item.title}</h3>
-              <Link href={`/post/${item.id}`}>View more</Link>
-            </article>
-          ))}
+          {page.items.map(
+            (item: {
+              id: Key | null | undefined;
+              title:
+                | string
+                | number
+                | boolean
+                | ReactElement<any, string | JSXElementConstructor<any>>
+                | ReactFragment
+                | ReactPortal
+                | null
+                | undefined;
+            }) => (
+              <article key={item.id}>
+                <h3>{item.title}</h3>
+                <Link href={`/post/${item.id}`}>View more</Link>
+              </article>
+            ),
+          )}
         </Fragment>
       ))}
       <hr />
