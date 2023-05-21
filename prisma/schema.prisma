@@ -1,6 +1,9 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
+// potential solution to separating tables in to their own files
+// https://github.com/prisma/prisma/issues/92#issuecomment-1159610157
+
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
@@ -38,16 +41,17 @@ model Session {
 }
 
 model User {
-  id            String    @id @default(cuid())
-  name          String?   @unique
-  email         String?   @unique
+  id            String        @id @default(cuid())
+  name          String?       @unique
+  email         String?       @unique
   emailVerified DateTime?
   password      String?
   image         String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
   accounts      Account[]
   sessions      Session[]
+  TuningSheet   TuningSheet[]
 }
 
 model VerificationToken {
@@ -71,8 +75,92 @@ model Post {
 }
 
 model Manufacturer {
-  id           String @id @default(cuid())
+  id           String     @id @default(cuid())
   name         String
   yearFounded  Int
   headquarters String
+  image        String?
+  models       CarModel[]
 }
+model CarModel {
+  id           String        @id @default(uuid())
+  name         String
+  image        String?
+  manufacturer Manufacturer  @relation(fields: [id], references: [id], onDelete: Cascade)
+  tuningSheets TuningSheet[]
+}
+
+enum UploadStatus {
+  draft
+  published
+}
+
+enum tireChoices {
+  comfortHard // Comfort: Hard (CH)
+  comfortMedium // Comfort: Medium (CM)
+  comfortSoft // Comfort: Soft (CS)
+  sportsHard // Sports: Hard (SH)
+  sportsMedium // Sports: Medium (SM)
+  sportsSoft // Sports: Soft (SS)
+  racingHard // Racing: Hard (RH)
+  racingMedium // Racing: Medium (RM)
+  racingSoft // Racing: Soft (RS)
+  racingIntermediate // Racing: Intermediate
+  racingHeavyWet // Racing: Heavy Wet
+  dirt // Dirt
+}
+
+enum suspensionChoices {
+  normal
+  sports
+  heightAdjustable
+  fullyCustom
+}
+
+enum differentialChoices {
+  normal
+  oneWay
+  twoWay
+  fullyCustom
+}
+
+model TuningSheet {
+  id                String              @id @default(uuid())
+  author            User?               @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  authorId          String?
+  title             String              @db.VarChar(250)
+  text              String              @db.VarChar(1000)
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @default(now()) @updatedAt
+  status            UploadStatus        @default(draft)
+  car               CarModel?           @relation(fields: [carId], references: [id], onDelete: SetNull)
+  carId             String?
+  performancePoints Decimal             @db.Decimal(5, 2)
+  tiresFront        tireChoices         @default(comfortHard)
+  tiresRear         tireChoices         @default(comfortHard)
+  suspension        suspensionChoices   @default(normal)
+  heightFront       Int
+  heightRear        Int
+  rollBarFront      Int
+  rollBarRear       Int
+  compressionFront  Int
+  compressionRear   Int
+  expansionFront    Int
+  expansionRear     Int
+  naturalFreqFront  Decimal             @db.Decimal(4, 2)
+  naturalFreqRear   Decimal             @db.Decimal(4, 2)
+  camberFront       Decimal             @db.Decimal(3, 1)
+  camberRear        Decimal             @db.Decimal(3, 1)
+  toeFront          Decimal             @db.Decimal(3, 2)
+  toeRear           Decimal             @db.Decimal(3, 2)
+  differential      differentialChoices @default(normal)
+  initTorqueFront   Int
+  initTorqueRear    Int
+  accelSensFront    Int
+  accelSensRear     Int
+  brakingSensFront  Int
+  brakingSensRear   Int
+  tvcDifferential   Boolean
+  frontRearDis      String              @db.VarChar(10)
+}
+
