@@ -13,6 +13,7 @@ generator client {
   provider = "prisma-client-js"
 }
 
+// ==================== AUTHENTICATION ====================
 model Account {
   id                String  @id @default(cuid())
   userId            String
@@ -62,6 +63,8 @@ model VerificationToken {
   @@unique([identifier, token])
 }
 
+// ==================== EXAMPLE ====================
+
 model Post {
   id    String @id @default(uuid())
   title String
@@ -74,6 +77,8 @@ model Post {
   updatedAt DateTime @default(now()) @updatedAt
 }
 
+// ==================== CARS ====================
+
 model Manufacturer {
   id           String     @id @default(cuid())
   name         String
@@ -82,6 +87,7 @@ model Manufacturer {
   image        String?
   models       CarModel[]
 }
+
 model CarModel {
   id           String        @id @default(uuid())
   name         String
@@ -89,6 +95,8 @@ model CarModel {
   manufacturer Manufacturer  @relation(fields: [id], references: [id], onDelete: Cascade)
   tuningSheets TuningSheet[]
 }
+
+// ==================== TUNING SHEETS ====================
 
 enum UploadStatus {
   draft
@@ -163,4 +171,3 @@ model TuningSheet {
   tvcDifferential   Boolean
   frontRearDis      String              @db.VarChar(10)
 }
-
