@@ -13,11 +13,10 @@ import {
 import type { AppRouter } from '~/server/routers/_app';
 
 import { useSession, signIn, signOut } from 'next-auth/react';
-import { apiBaseUrl } from 'next-auth/client/_utils';
 
 const IndexPage: NextPageWithLayout = () => {
   const { data: session } = useSession();
-  console.log(session);
+  // console.log(session);
 
   const utils = trpc.useContext();
   const postsQuery = trpc.post.list.useInfiniteQuery(
@@ -31,7 +30,7 @@ const IndexPage: NextPageWithLayout = () => {
     },
   );
   const manufacturerQuery = trpc.manufacturer.getAll.useQuery(undefined);
-  console.log(manufacturerQuery.data);
+  // console.log(manufacturerQuery.data);
 
   const addPost = trpc.post.add.useMutation({
     async onSuccess() {
@@ -220,6 +219,15 @@ const IndexPage: NextPageWithLayout = () => {
           <p style={{ color: 'red' }}>{addManufacturer.error.message}</p>
         )}
       </form>
+    </>
+  );
+};
+
+IndexPage.getLayout = function getLayout(component: ReactElement) {
+  return (
+    <>
+      <h1>index page h1 tag</h1>
+      {component}
     </>
   );
 };

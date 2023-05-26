@@ -11,7 +11,10 @@ export const DefaultLayout = ({ children }: DefaultLayoutProps) => {
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <main>{children}</main>
+      <main>
+        <h1>default layout h1 tag</h1>
+        {children}
+      </main>
     </>
   );
 };

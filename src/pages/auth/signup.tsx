@@ -1,11 +1,11 @@
-import { useState } from 'react';
+// import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useRouter } from 'next/router';
 import { inferProcedureInput } from '@trpc/server';
 import { AppRouter } from '~/server/routers/_app';
 import { trpc } from '~/utils/trpc';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { userCreateSchema } from '~/schemas/userSchema';
+// import { zodResolver } from '@hookform/resolvers/zod';
+// import { userCreateSchema } from '~/schemas/userSchema';
 // import * as z from 'zod';
 
 const SignUp = () => {
