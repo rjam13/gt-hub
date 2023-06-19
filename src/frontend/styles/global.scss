@@ -1,0 +1,83 @@
+@use 'mixins' as m;
+
+// This file is used as the base for tailwindCSS
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    color: white;
+    background: linear-gradient(
+      180deg,
+      #202d40 0%,
+      #323f47 49.48%,
+      #1b2c3d 100%
+    );
+    background-size: 100%
+  }
+
+  h1 {
+    @include m.clampSize(16, 46, 320, 1200);
+    font-weight: 400;
+    padding: 0;
+  }
+
+  h2 {
+    @include m.clampSize(12, 32, 320, 1200);
+    // color: theme('colors.primary');
+    color: orange;
+    font-weight: 200;
+  }
+
+  h3 {
+    @include m.clampSize(12, 24, 320, 1200);
+    font-weight: 100;
+  }
+
+  p,
+  select {
+    @include m.clampSize(12, 18, 320, 1200);
+    padding: 0.25rem 0;
+    font-weight: 400;
+  }
+
+  .btn {
+    @include m.clampSize(12, 16, 320, 1200);
+    color: white;
+    cursor: pointer;
+    // background-color: theme('colors.primary-dark');
+    background-color: grey;
+    border-radius: 20px;
+    padding: 0.5em;
+    margin: 0.5em;
+    transition: 0.4s;
+    letter-spacing: 0.15em;
+  }
+
+  .btn:hover {
+    color: black;
+    // background-color: theme('colors.secondary');
+    background-color: yellow;
+  }
+
+  a {
+    @include m.clampSize(12, 20, 320, 1200);
+    text-decoration: none;
+    // color: theme('colors.primary');
+    color: orange;
+    transition: 0.4s;
+  }
+
+  a:hover {
+    // color: theme('colors.secondary');
+    color: yellow;
+  }
+}
+
+@layer components {
+  .pixelated {
+    image-rendering: pixelated;
+  }
+}

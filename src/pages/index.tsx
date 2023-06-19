@@ -171,14 +171,14 @@ const IndexPage: NextPageWithLayout = () => {
   );
 };
 
-IndexPage.getLayout = function getLayout(component: ReactElement) {
-  return (
-    <>
-      <h1>index page h1 tag</h1>
-      {component}
-    </>
-  );
-};
+// IndexPage.getLayout = function getLayout(component: ReactElement) {
+//   return (
+//     <>
+//       <h1>index page h1 tag</h1>
+//       {component}
+//     </>
+//   );
+// };
 
 export default IndexPage;
 
