@@ -81,7 +81,7 @@ model Post {
 
 model Manufacturer {
   id           String     @id @default(cuid())
-  name         String
+  name         String     @unique
   yearFounded  Int
   headquarters String
   image        String?
@@ -89,11 +89,12 @@ model Manufacturer {
 }
 
 model CarModel {
-  id           String        @id @default(uuid())
-  name         String
-  image        String?
-  manufacturer Manufacturer  @relation(fields: [id], references: [id], onDelete: Cascade)
-  tuningSheets TuningSheet[]
+  id             String        @id @default(uuid())
+  name           String
+  image          String?
+  manufacturer   Manufacturer? @relation(fields: [manufacturerId], references: [id], onDelete: Cascade)
+  manufacturerId String?
+  tuningSheets   TuningSheet[]
 }
 
 // ==================== TUNING SHEETS ====================
@@ -103,7 +104,7 @@ enum UploadStatus {
   published
 }
 
-enum tireChoices {
+enum tire {
   comfortHard // Comfort: Hard (CH)
   comfortMedium // Comfort: Medium (CM)
   comfortSoft // Comfort: Soft (CS)
@@ -118,35 +119,139 @@ enum tireChoices {
   dirt // Dirt
 }
 
-enum suspensionChoices {
+enum suspension {
   normal
   sports
   heightAdjustable
   fullyCustom
 }
 
-enum differentialChoices {
+enum differential {
   normal
   oneWay
   twoWay
   fullyCustom
 }
 
+enum ecu {
+  normal
+  sports
+  fullControl
+}
+
+enum transmission {
+  normal
+  lowCloseRatio
+  highCloseRatio
+  fullyCustomManual
+  fullyCustomAuto
+}
+
+enum nitrous {
+  none
+  normal
+  nitrous
+}
+
+enum centerDiff {
+  none
+  normal
+  torqueVectoring
+}
+
+enum turbo {
+  none
+  low
+  Medium
+  high
+  ultraHigh
+}
+
+enum antiLag {
+  off
+  weak
+  strong
+}
+
+enum intercooler {
+  none
+  normal
+  sport
+  racing
+}
+
+enum supercharger {
+  none
+  lowEnd
+  highEnd
+  highRPM
+}
+
+enum airCleaner {
+  none // for electric cars
+  normal
+  sports
+  racing
+}
+
+enum muffler {
+  normal
+  sports
+  semiRacing
+  racing
+}
+
+enum manifold {
+  none // for electric cars
+  normal
+  racing
+}
+
+enum brakes {
+  normal
+  sport
+  racingSlotted
+  racingDrilled
+  carbon
+}
+
+enum brakePads {
+  normal
+  sport
+  racing
+}
+
+enum clutch {
+  normal
+  sports
+  semiRacing
+  racing
+}
+
+enum propShaft {
+  none // for electric cars
+  normal
+  carbon
+}
+
 model TuningSheet {
-  id                String              @id @default(uuid())
-  author            User?               @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  id                String       @id @default(uuid())
+  author            User?        @relation(fields: [authorId], references: [id], onDelete: Cascade)
   authorId          String?
-  title             String              @db.VarChar(250)
-  text              String              @db.VarChar(1000)
-  createdAt         DateTime            @default(now())
-  updatedAt         DateTime            @default(now()) @updatedAt
-  status            UploadStatus        @default(draft)
-  car               CarModel?           @relation(fields: [carId], references: [id], onDelete: SetNull)
+  car               CarModel?    @relation(fields: [carId], references: [id], onDelete: SetNull)
   carId             String?
-  performancePoints Decimal             @db.Decimal(5, 2)
-  tiresFront        tireChoices         @default(comfortHard)
-  tiresRear         tireChoices         @default(comfortHard)
-  suspension        suspensionChoices   @default(normal)
+  // information
+  title             String       @db.VarChar(250)
+  text              String       @db.VarChar(1000)
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @default(now()) @updatedAt
+  status            UploadStatus @default(draft)
+  performancePoints Decimal      @db.Decimal(5, 2)
+  // tires
+  tiresFront        tire         @default(comfortHard)
+  tiresRear         tire         @default(comfortHard)
+  // suspension
+  suspension        suspension   @default(normal)
   heightFront       Int
   heightRear        Int
   rollBarFront      Int
@@ -155,19 +260,77 @@ model TuningSheet {
   compressionRear   Int
   expansionFront    Int
   expansionRear     Int
-  naturalFreqFront  Decimal             @db.Decimal(4, 2)
-  naturalFreqRear   Decimal             @db.Decimal(4, 2)
-  camberFront       Decimal             @db.Decimal(3, 1)
-  camberRear        Decimal             @db.Decimal(3, 1)
-  toeFront          Decimal             @db.Decimal(3, 2)
-  toeRear           Decimal             @db.Decimal(3, 2)
-  differential      differentialChoices @default(normal)
+  naturalFreqFront  Decimal      @db.Decimal(4, 2)
+  naturalFreqRear   Decimal      @db.Decimal(4, 2)
+  camberFront       Decimal      @db.Decimal(3, 1)
+  camberRear        Decimal      @db.Decimal(3, 1)
+  // negative values = toe out
+  toeFront          Decimal      @db.Decimal(3, 2)
+  toeRear           Decimal      @db.Decimal(3, 2)
+  // differential
+  differential      differential @default(normal)
   initTorqueFront   Int
   initTorqueRear    Int
   accelSensFront    Int
   accelSensRear     Int
   brakingSensFront  Int
   brakingSensRear   Int
-  tvcDifferential   Boolean
-  frontRearDis      String              @db.VarChar(10)
+  tvcDifferential   centerDiff   @default(none)
+  frontRearDis      String       @db.VarChar(10)
+  // aero
+  downforceFront    Int          @default(0)
+  downforceRear     Int          @default(0)
+  // ecu
+  ecu               ecu          @default(normal)
+  ecuOutput         Int          @default(100)
+  // performance adjustment
+  ballast           Int          @default(0)
+  ballastPos        Int          @default(0)
+  powerRes          Int          @default(100)
+  // transmission
+  transmission      transmission @default(normal)
+  topSpeed          Int          @default(0)
+  gears             Int[]        @default([])
+  // nitrous/overtake
+  nitrous           nitrous      @default(none)
+  nitrousOutput     Int?         @default(0)
+  // supercharger
+  turbo             turbo        @default(none)
+  antiLag           Boolean      @default(false)
+  antiLagSetting    antiLag      @default(off)
+  intercooler       intercooler  @default(normal)
+  supercharger      supercharger @default(none)
+  // intake & exhaust
+  airCleaner        airCleaner   @default(normal)
+  muffler           muffler      @default(normal)
+  manifold          manifold     @default(normal)
+  // brakes
+  brakes            brakes       @default(normal)
+  brakePads         brakePads    @default(normal)
+  handBrake         Boolean      @default(false)
+  handBrakeTorq     Int          @default(0)
+  brakeBalance      Boolean      @default(false)
+  brakeFRBalance    Int          @default(0)
+  // steering
+  steeringKit       Boolean      @default(false)
+  fourWheelSteering Boolean      @default(false)
+  rearSteerAngle    Int          @default(0)
+  // drivetrain
+  clutch            clutch       @default(normal)
+  propShaft         propShaft    @default(normal)
+  // engine tuning
+  boreUp            Boolean      @default(false)
+  strokeUp          Boolean      @default(false)
+  engineBalanceTune Boolean      @default(false)
+  polishPorts       Boolean      @default(false)
+  highLiftCamShafts Boolean      @default(false)
+  TitaniumRodsPist  Boolean      @default(false)
+  RacingCrankShaft  Boolean      @default(false)
+  HighCompPistons   Boolean      @default(false)
+  // bodywork
+  // 0 = no weight reduction, 
+  // 1 = stage 1 weight reduction, 
+  // 2 = stage 2 weight reduction, etc.
+  weightReduction   Int          @default(0)
+  bodyRigidity      Boolean      @default(false)
 }

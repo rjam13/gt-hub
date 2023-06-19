@@ -25,7 +25,7 @@ export const authOptions: NextAuthOptions = {
         },
         password: { label: 'Password', type: 'password' },
       },
-      authorize: async (credentials, req) => {
+      authorize: async (credentials) => {
         try {
           const { name, password } = await checkCredentialsSchema.parseAsync(
             credentials,
@@ -86,7 +86,9 @@ export const authOptions: NextAuthOptions = {
     strategy: 'jwt',
 
     // Seconds - How long until an idle session expires and is no longer valid.
-    maxAge: 30 * 24 * 60 * 60, // 30 days
+    // maxAge: 30 * 24 * 60 * 60, // 30 days
+    // maxAge: 60, // 1 minute
+    maxAge: 60 * 60, // 1 hour
 
     // Seconds - Throttle how frequently to write to database to extend a session.
     // Use it to limit write operations. Set to 0 to always update the database.
@@ -118,54 +120,32 @@ export const authOptions: NextAuthOptions = {
       }
       return Promise.resolve(url.startsWith(baseUrl) ? url : baseUrl);
     },
+    // Getting the JWT token from API response
     jwt: async ({ token, user }) => {
-      if (user) {
+      logger.debug(`jwt:token`, token, '\n\n');
+      logger.debug(`jwt:user`, user, '\n\n');
+      const isSigningIn = user ? true : false;
+      if (isSigningIn) {
         token.id = user.id;
-        token.name = user.name;
+        token.email = user.email;
+        token.username = user.name;
+      } else {
+        logger.debug(`jwt:isSignIn: user is not logged in`, '\n\n');
       }
-      return token;
+      logger.debug(`resolving token`, token, '\n\n');
+      return Promise.resolve(token);
     },
     session: async ({ session, token }) => {
+      logger.debug(`session:session`, session, '\n\n');
+      logger.debug(`session:token`, token, '\n\n');
       if (token) {
-        return { ...session, id: token.id };
+        session.user.userId = token.userId;
+        session.user.email = token.email;
+        session.user.username = token.username;
       }
-      return session;
+      logger.debug(`resolving session`, session, '\n\n');
+      return Promise.resolve(session);
     },
-    //   signIn: async ({
-    //     user,
-    //     account,
-    //     profile,
-    //     email,
-    //     credentials,
-    //   }) => {
-    //     logger.debug(`signIn:user`, user, "\n\n");
-    //     logger.debug(`signIn:account`, account, "\n\n");
-    //     logger.debug(`signIn:profile`, profile, "\n\n");
-    //     return true;
-    //   },
-    // // Getting the JWT token from API response
-    // jwt: async ({ token, user, account }) => {
-    //   logger.debug(`jwt:token`, token, '\n\n');
-    //   logger.debug(`jwt:user`, user, '\n\n');
-    //   logger.debug(`jwt:account`, account, '\n\n');
-    //   const isSigningIn = user ? true : false;
-    //   if (isSigningIn) {
-    //     token.jwt = user.access_token;
-    //     token.user = user;
-    //   } else {
-    //     logger.debug(`jwt:isSignIn: user is not logged in`, '\n\n');
-    //   }
-    //   logger.debug(`resolving token`, token, '\n\n');
-    //   return Promise.resolve(token);
-    // },
-    // session: async ({ session, token }) => {
-    //   logger.debug(`session:session`, session, '\n\n');
-    //   logger.debug(`session:token`, token, '\n\n');
-    //   session.jwt = token.jwt;
-    //   session.user = token.user;
-    //   logger.debug(`resolving session`, session, '\n\n');
-    //   return Promise.resolve(session);
-    // },
   },
 };
 export default NextAuth(authOptions);
