@@ -6,11 +6,15 @@ import { trpc } from '~/utils/trpc';
 
 import { SessionProvider } from 'next-auth/react';
 
+// explanation of this file:
+// https://www.learnbestcoding.com/post/33/nextjs-template-layout
+
 export type NextPageWithLayout<
   TProps = Record<string, unknown>,
   TInitialProps = TProps,
 > = NextPage<TProps, TInitialProps> & {
-  getLayout?: (page: ReactElement) => ReactNode;
+  // getLayout?: (page: ReactElement) => ReactNode;
+  getLayout?: (page: ReactElement, pageProps?: AppProps) => ReactNode;
 };
 
 type AppPropsWithLayout = AppProps & {

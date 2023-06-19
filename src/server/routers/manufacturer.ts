@@ -1,5 +1,6 @@
 import { router, publicProcedure } from '../trpc';
 import { Prisma } from '@prisma/client';
+import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 
 /**
@@ -16,12 +17,40 @@ const defaultManufacturerSelect = Prisma.validator<Prisma.ManufacturerSelect>()(
   },
 );
 
+const ManufacturerModelsSelect = Prisma.validator<Prisma.ManufacturerSelect>()({
+  id: true,
+  name: true,
+  yearFounded: true,
+  headquarters: true,
+  models: true,
+});
+
 export const manufacturerRouter = router({
   getAll: publicProcedure.query(({ ctx }) => {
     return ctx.prisma.manufacturer.findMany({
       select: defaultManufacturerSelect,
     });
   }),
+  byName: publicProcedure
+    .input(
+      z.object({
+        name: z.string(),
+      }),
+    )
+    .query(async ({ input, ctx }) => {
+      const { name } = input;
+      const manufacturer = await ctx.prisma.manufacturer.findUnique({
+        where: { name: name },
+        select: ManufacturerModelsSelect,
+      });
+      if (!manufacturer) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: `No manufacturer with name '${name}'`,
+        });
+      }
+      return manufacturer;
+    }),
   add: publicProcedure
     .input(
       z.object({

@@ -5,6 +5,7 @@ import { publicProcedure, router } from '../trpc';
 import { manufacturerRouter } from './manufacturer';
 import { postRouter } from './post';
 import { userRouter } from './user';
+import { tuningSheetRouter } from './tuningSheet';
 
 export const appRouter = router({
   healthcheck: publicProcedure.query(() => 'yay!'),
@@ -12,6 +13,7 @@ export const appRouter = router({
   post: postRouter,
   manufacturer: manufacturerRouter,
   user: userRouter,
+  tuningSheet: tuningSheetRouter,
 });
 
 export type AppRouter = typeof appRouter;

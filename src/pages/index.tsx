@@ -1,6 +1,6 @@
 import { trpc } from '../utils/trpc';
-import { NextPageWithLayout } from './_app';
 import { inferProcedureInput } from '@trpc/server';
+import { NextPageWithLayout } from './_app';
 import Link from 'next/link';
 import {
   Fragment,
@@ -13,11 +13,10 @@ import {
 import type { AppRouter } from '~/server/routers/_app';
 
 import { useSession, signIn, signOut } from 'next-auth/react';
-import { apiBaseUrl } from 'next-auth/client/_utils';
 
 const IndexPage: NextPageWithLayout = () => {
   const { data: session } = useSession();
-  console.log(session);
+  // console.log(session);
 
   const utils = trpc.useContext();
   const postsQuery = trpc.post.list.useInfiniteQuery(
@@ -30,18 +29,11 @@ const IndexPage: NextPageWithLayout = () => {
       },
     },
   );
-  const manufacturerQuery = trpc.manufacturer.getAll.useQuery(undefined);
-  console.log(manufacturerQuery.data);
 
   const addPost = trpc.post.add.useMutation({
     async onSuccess() {
       // refetches posts after a post is added
       await utils.post.list.invalidate();
-    },
-  });
-  const addManufacturer = trpc.manufacturer.add.useMutation({
-    onSuccess: () => {
-      void manufacturerQuery.refetch();
     },
   });
 
@@ -76,6 +68,8 @@ const IndexPage: NextPageWithLayout = () => {
           </button>
         </>
       )}
+      <br />
+      <Link href={`/cars`}>View Cars</Link>
 
       <h1>Welcome to your tRPC starter!</h1>
       <p>
@@ -173,53 +167,15 @@ const IndexPage: NextPageWithLayout = () => {
           <p style={{ color: 'red' }}>{addPost.error.message}</p>
         )}
       </form>
-      <form
-        onSubmit={async (e) => {
-          e.preventDefault();
-          const $form = e.currentTarget;
-          const values = Object.fromEntries(new FormData($form));
-          type Input = inferProcedureInput<AppRouter['manufacturer']['add']>;
-          const input: Input = {
-            name: values.manufacturer as string,
-            yearFounded: Number(values.yearFounded) as number,
-            headquarters: values.headquarters as string,
-          };
-          try {
-            await addManufacturer.mutateAsync(input);
+    </>
+  );
+};
 
-            $form.reset();
-          } catch (cause) {
-            console.error({ cause }, 'Failed to add manufacturer');
-          }
-        }}
-      >
-        <label htmlFor="manufacturer">manufacturer:</label>
-        <br />
-        <input
-          id="manufacturer"
-          name="manufacturer"
-          type="text"
-          disabled={addManufacturer.isLoading}
-        />
-        <label htmlFor="yearFounded">yearFounded:</label>
-        <input
-          id="yearFounded"
-          name="yearFounded"
-          type="text"
-          disabled={addManufacturer.isLoading}
-        />
-        <label htmlFor="headquarters">headquarters:</label>
-        <input
-          id="headquarters"
-          name="headquarters"
-          type="text"
-          disabled={addManufacturer.isLoading}
-        />
-        <input type="submit" disabled={addManufacturer.isLoading} />
-        {addManufacturer.error && (
-          <p style={{ color: 'red' }}>{addManufacturer.error.message}</p>
-        )}
-      </form>
+IndexPage.getLayout = function getLayout(component: ReactElement) {
+  return (
+    <>
+      <h1>index page h1 tag</h1>
+      {component}
     </>
   );
 };

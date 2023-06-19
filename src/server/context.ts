@@ -7,8 +7,14 @@ import { authOptions } from '~/pages/api/auth/[...nextauth]';
 
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
 interface CreateInnerContextOptions extends Partial<CreateNextContextOptions> {
+  // req?: NextApiRequest;
+  // res?: NextApiResponse;
   session: Session | null;
 }
+// above is essentially this below
+// req?: NextApiRequest;
+// res?: NextApiResponse;
+// session: Session | null;
 
 /**
  * Inner function for `createContext` where we create the context.

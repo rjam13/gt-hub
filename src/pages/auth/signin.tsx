@@ -38,6 +38,7 @@ const SignIn = ({
       try {
         // const body = { ...defaultBody, userData: { ...data } };
         // console.log(`POSTing ${JSON.stringify(body, null, 2)}`);
+        // console.log(router.query.callbackUrl);
         const res = await signIn('credentials', {
           ...data,
           callbackUrl: router.query.callbackUrl as string,

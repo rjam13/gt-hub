@@ -6,7 +6,9 @@ import { AppRouter, appRouter } from './_app';
 import { inferProcedureInput } from '@trpc/server';
 
 test('add and get post', async () => {
-  const ctx = await createContextInner({});
+  const ctx = await createContextInner({
+    session: null,
+  });
   const caller = appRouter.createCaller(ctx);
 
   const input: inferProcedureInput<AppRouter['post']['add']> = {
