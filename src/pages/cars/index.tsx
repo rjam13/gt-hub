@@ -1,11 +1,8 @@
 import { trpc } from '../../utils/trpc';
 import { inferProcedureInput } from '@trpc/server';
-import { GetServerSideProps } from 'next';
-import { getSession } from 'next-auth/react';
 import { NextPageWithLayout } from '~/pages/_app';
 import { ReactElement, Fragment } from 'react';
 import type { AppRouter } from '~/server/routers/_app';
-import { redirectToSignin } from '~/utils/user';
 import Link from 'next/dist/client/link';
 
 const Cars: NextPageWithLayout = () => {
@@ -82,15 +79,7 @@ const Cars: NextPageWithLayout = () => {
 
 export default Cars;
 
-export const getServerSideProps: GetServerSideProps = async (context) => {
-  const session = await getSession(context);
-  if (!session) {
-    return redirectToSignin(context);
-  }
-  return {
-    props: {},
-  };
-};
+Cars.isProtected = true;
 
 Cars.getLayout = function getLayout(component: ReactElement) {
   return (

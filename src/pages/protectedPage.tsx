@@ -1,13 +1,15 @@
 import React from 'react';
-import { useSession } from 'next-auth/react';
+import { signIn, useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
+import { ReactNode } from 'react';
 
-const ProtectedPage = () => {
-  const { push } = useRouter();
+const ProtectedPage = ({ children }: { children: ReactNode }) => {
   const { status } = useSession({
     required: true,
     onUnauthenticated() {
-      push('/');
+      signIn(undefined, {
+        callbackUrl: window.location.href,
+      });
     },
   });
 
@@ -15,7 +17,7 @@ const ProtectedPage = () => {
     return 'Loading...';
   }
 
-  return 'User is logged in';
+  return <>{children}</>;
 };
 
 export default ProtectedPage;

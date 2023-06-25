@@ -1,9 +1,6 @@
-import { getSession } from 'next-auth/react';
 import NextError from 'next/error';
 import { useRouter } from 'next/router';
-import { GetServerSideProps } from 'next/types';
 import { NextPageWithLayout } from '~/pages/_app';
-import { redirectToSignin } from '~/utils/user';
 import { Fragment } from 'react';
 import Link from 'next/dist/client/link';
 import { trpc } from '~/utils/trpc';
@@ -59,12 +56,4 @@ const ManufacturerPage: NextPageWithLayout = () => {
 
 export default ManufacturerPage;
 
-export const getServerSideProps: GetServerSideProps = async (context) => {
-  const session = await getSession(context);
-  if (!session) {
-    return redirectToSignin(context);
-  }
-  return {
-    props: {},
-  };
-};
+ManufacturerPage.isProtected = true;

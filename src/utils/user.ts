@@ -25,32 +25,3 @@ export const createUsername = (): string => {
 export const hashPassword = (password: string) => {
   return sha256(password).toString();
 };
-
-// redirectToSignin is used for redirecting user to signin with a callbackurl,
-// so that after signing in, they would be redirected back to their original page.
-// Normally used in getServersideProps like below:
-//
-// export const getServerSideProps: GetServerSideProps = async (context) => {
-//   const session = await getSession(context);
-//   if (!session) {
-//     return redirectToSignin(context);
-//   }
-//   return {
-//     props: {},
-//   };
-// };
-export const redirectToSignin = (context: GetServerSidePropsContext) => {
-  const callbackUrl =
-    'http://' +
-    (context.req.headers.host as string) +
-    (context.resolvedUrl as string);
-  return {
-    redirect: {
-      permanent: false,
-      destination: `/auth/signin?${new URLSearchParams({
-        callbackUrl,
-      })}`,
-    },
-    props: {},
-  };
-};

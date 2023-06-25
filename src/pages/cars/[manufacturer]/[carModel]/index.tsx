@@ -1,11 +1,8 @@
-import { getSession } from 'next-auth/react';
-import NextError from 'next/error';
 import { useRouter } from 'next/router';
-import { GetServerSideProps } from 'next/types';
 import { Fragment } from 'react';
 import { NextPageWithLayout } from '~/pages/_app';
-import { RouterOutput, trpc } from '~/utils/trpc';
-import { redirectToSignin } from '~/utils/user';
+import { trpc } from '~/utils/trpc';
+import ProtectedPage from '~/pages/protectedPage';
 
 const CarModelPage: NextPageWithLayout = () => {
   const modelName = useRouter().query.carModel as string;
@@ -34,14 +31,4 @@ const CarModelPage: NextPageWithLayout = () => {
 
 export default CarModelPage;
 
-export const getServerSideProps: GetServerSideProps = async (context) => {
-  const carModel = context.query.carModel;
-  // const manufacturerQuery = trpc.manufacturer.byName.useQuery({ name });
-  const session = await getSession(context);
-  if (!session) {
-    return redirectToSignin(context);
-  }
-  return {
-    props: {},
-  };
-};
+CarModelPage.isProtected = true;
