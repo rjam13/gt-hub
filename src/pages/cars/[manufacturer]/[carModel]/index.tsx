@@ -2,7 +2,6 @@ import { useRouter } from 'next/router';
 import { Fragment } from 'react';
 import { NextPageWithLayout } from '~/pages/_app';
 import { trpc } from '~/utils/trpc';
-import ProtectedPage from '~/pages/protectedPage';
 
 const CarModelPage: NextPageWithLayout = () => {
   const modelName = useRouter().query.carModel as string;

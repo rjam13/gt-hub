@@ -19,20 +19,18 @@
   }
 
   h1 {
-    @include m.clampSize(16, 46, 320, 1200);
+    @include m.clampSize(20, 46, 320, 1200);
     font-weight: 400;
     padding: 0;
   }
 
   h2 {
-    @include m.clampSize(12, 32, 320, 1200);
-    // color: theme('colors.primary');
-    color: orange;
-    font-weight: 200;
+    @include m.clampSize(16, 32, 320, 1200);
+    font-weight: 400;
   }
 
   h3 {
-    @include m.clampSize(12, 24, 320, 1200);
+    @include m.clampSize(14, 24, 320, 1200);
     font-weight: 100;
   }
 
@@ -44,40 +42,39 @@
   }
 
   .btn {
-    @include m.clampSize(12, 16, 320, 1200);
+    @include m.clampSize(12, 18, 320, 1200);
+    background: #148de6;
+    border-radius: 20px;
     color: white;
     cursor: pointer;
-    // background-color: theme('colors.primary-dark');
-    background-color: grey;
-    border-radius: 20px;
-    padding: 0.5em;
-    margin: 0.5em;
+    display: flex;
+    padding: 5px clamp(0.5rem, 1vw, 1rem);
+    margin: 0.5rem;
     transition: 0.4s;
-    letter-spacing: 0.15em;
+    white-space: nowrap;
   }
 
   .btn:hover {
-    color: black;
-    // background-color: theme('colors.secondary');
-    background-color: yellow;
+    background-color: #127ac7;
+    color: white;
   }
 
   a {
     @include m.clampSize(12, 20, 320, 1200);
     text-decoration: none;
-    // color: theme('colors.primary');
-    color: orange;
+    color: #148de6;
     transition: 0.4s;
   }
 
   a:hover {
-    // color: theme('colors.secondary');
-    color: yellow;
+    color: #127ac7;
   }
-}
 
-@layer components {
-  .pixelated {
-    image-rendering: pixelated;
+  // *** FOR TESTING ONLY ***
+  input[type='text'],
+  input[type='email'],
+  input[type='password'],
+  textarea {
+    background-color: black;
   }
 }

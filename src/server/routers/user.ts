@@ -1,7 +1,7 @@
 import { router, publicProcedure } from '../trpc';
 import { logger } from '~/utils/logger';
 import { userCreateSchema } from '~/schemas/userSchema';
-import { hashPassword } from '~/utils/user';
+import { comparePassword, newPassword } from '~/utils/user';
 import * as trpc from '@trpc/server';
 
 export const userRouter = router({
@@ -28,9 +28,11 @@ export const userRouter = router({
           message: 'User already exists.',
         });
       }
+      const security = newPassword(password);
       const userData = {
         ...input,
-        password: hashPassword(password),
+        salt: security.salt,
+        password: security.passwordHash,
       };
       logger.debug('creating user', userData);
       const user = await ctx.prisma.user.create({

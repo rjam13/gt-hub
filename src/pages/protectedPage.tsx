@@ -1,6 +1,5 @@
 import React from 'react';
 import { signIn, useSession } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
 import { ReactNode } from 'react';
 
 const ProtectedPage = ({ children }: { children: ReactNode }) => {

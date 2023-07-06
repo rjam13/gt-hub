@@ -10,6 +10,7 @@ import {
 } from '~/schemas/userSchema';
 import { useCallback } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { signUp } from '~/utils/user';
 
 // https://github.com/FranciscoMendes10866/next-auth-trpc-prisma/blob/main/src/pages/index.tsx
 
@@ -72,6 +73,10 @@ const SignIn = ({
         />
         <input type="submit" value="Sign In" />
       </form>
+      <h2>Are you new here?</h2>
+      <button className="btn" onClick={() => signUp()}>
+        Sign up
+      </button>
       <h3>OR</h3>
       {providers != null ? (
         Object.values(providers).map((provider) => {

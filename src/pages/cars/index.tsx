@@ -7,7 +7,6 @@ import Link from 'next/dist/client/link';
 
 const Cars: NextPageWithLayout = () => {
   const manufacturerQuery = trpc.manufacturer.getAll.useQuery(undefined);
-  console.log(manufacturerQuery.data);
   const addManufacturer = trpc.manufacturer.add.useMutation({
     onSuccess: () => {
       void manufacturerQuery.refetch();
@@ -80,12 +79,3 @@ const Cars: NextPageWithLayout = () => {
 export default Cars;
 
 Cars.isProtected = true;
-
-Cars.getLayout = function getLayout(component: ReactElement) {
-  return (
-    <>
-      <h1>cars page h1 tag</h1>
-      {component}
-    </>
-  );
-};

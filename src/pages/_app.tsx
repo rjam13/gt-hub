@@ -3,7 +3,7 @@ import type { AppType, AppProps } from 'next/app';
 import type { ReactElement, ReactNode } from 'react';
 import { DefaultLayout } from '~/frontend/components/DefaultLayout';
 import { trpc } from '~/utils/trpc';
-import '../frontend/styles/global.scss';
+import '../frontend/styles/globals.scss';
 
 import { SessionProvider } from 'next-auth/react';
 import ProtectedPage from './protectedPage';
@@ -35,11 +35,15 @@ const MyApp = (({
 
   return (
     <SessionProvider session={session}>
-      {isProtected ? (
-        <ProtectedPage>{getLayout(<Component {...pageProps} />)}</ProtectedPage>
-      ) : (
-        getLayout(<Component {...pageProps} />)
-      )}
+      <div className="min-h-screen">
+        {isProtected ? (
+          <ProtectedPage>
+            {getLayout(<Component {...pageProps} />)}
+          </ProtectedPage>
+        ) : (
+          getLayout(<Component {...pageProps} />)
+        )}
+      </div>
     </SessionProvider>
   );
 }) as AppType;
