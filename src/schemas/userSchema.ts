@@ -29,4 +29,5 @@ export const defaultUserSelect = Prisma.validator<Prisma.UserSelect>()({
   email: true,
   image: true,
   password: true,
+  salt: true,
 });

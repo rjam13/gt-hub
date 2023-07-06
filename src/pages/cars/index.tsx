@@ -1,16 +1,12 @@
 import { trpc } from '../../utils/trpc';
 import { inferProcedureInput } from '@trpc/server';
-import { GetServerSideProps } from 'next';
-import { getSession } from 'next-auth/react';
 import { NextPageWithLayout } from '~/pages/_app';
 import { ReactElement, Fragment } from 'react';
 import type { AppRouter } from '~/server/routers/_app';
-import { redirectToSignin } from '~/utils/user';
 import Link from 'next/dist/client/link';
 
 const Cars: NextPageWithLayout = () => {
   const manufacturerQuery = trpc.manufacturer.getAll.useQuery(undefined);
-  console.log(manufacturerQuery.data);
   const addManufacturer = trpc.manufacturer.add.useMutation({
     onSuccess: () => {
       void manufacturerQuery.refetch();
@@ -82,21 +78,4 @@ const Cars: NextPageWithLayout = () => {
 
 export default Cars;
 
-export const getServerSideProps: GetServerSideProps = async (context) => {
-  const session = await getSession(context);
-  if (!session) {
-    return redirectToSignin(context);
-  }
-  return {
-    props: {},
-  };
-};
-
-Cars.getLayout = function getLayout(component: ReactElement) {
-  return (
-    <>
-      <h1>cars page h1 tag</h1>
-      {component}
-    </>
-  );
-};
+Cars.isProtected = true;

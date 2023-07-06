@@ -1,172 +1,73 @@
-import { trpc } from '../utils/trpc';
-import { inferProcedureInput } from '@trpc/server';
 import { NextPageWithLayout } from './_app';
-import Link from 'next/link';
-import {
-  Fragment,
-  JSXElementConstructor,
-  Key,
-  ReactElement,
-  ReactFragment,
-  ReactPortal,
-} from 'react';
-import type { AppRouter } from '~/server/routers/_app';
+import Image from 'next/image';
+import hero from '~/frontend/assets/hero.jpg';
+import Button from '~/frontend/components/Button';
 
 import { useSession, signIn, signOut } from 'next-auth/react';
+import { signUp } from '~/utils/user';
+import Widget from '~/frontend/components/Widget';
+import Navbar from '~/frontend/components/Navbar';
+import Footer from '~/frontend/components/Footer';
+import { ReactElement } from 'react';
 
 const IndexPage: NextPageWithLayout = () => {
   const { data: session } = useSession();
   // console.log(session);
 
-  const utils = trpc.useContext();
-  const postsQuery = trpc.post.list.useInfiniteQuery(
-    {
-      limit: 5,
-    },
-    {
-      getPreviousPageParam(lastPage: { items: any; nextCursor: any }) {
-        return lastPage.nextCursor;
-      },
-    },
-  );
-
-  const addPost = trpc.post.add.useMutation({
-    async onSuccess() {
-      // refetches posts after a post is added
-      await utils.post.list.invalidate();
-    },
-  });
-
-  // prefetch all posts for instant navigation
-  // useEffect(() => {
-  //   const allPosts = postsQuery.data?.pages.flatMap((page) => page.items) ?? [];
-  //   for (const { id } of allPosts) {
-  //     void utils.post.byId.prefetch({ id });
-  //   }
-  // }, [postsQuery.data, utils]);
-
   return (
     <>
+      {/* Hero */}
+      <div className="h-screen relative mb-8">
+        <Image src={hero} alt="hero image" className="h-full object-cover" />
+        <div className="absolute h-screen top-0 left-0 right-0 bg-hero-gradient" />
+        <div className="absolute top-1/2 -translate-y-1/2 left-0 right-0 max-w-screen sm:max-w-[380px] flex flex-col">
+          <div className="bg-black/60 px-[15px] py-[30px] ">
+            <p className="text-xl p-0">GT Hub</p>
+            <p className="text-xl p-0">
+              Scheduled lobbies, and tuning sheets for the community, by the
+              community
+            </p>
+          </div>
+          <div className="mt-[15px] flex justify-center">
+            <Button text="Lobbies" href="/" />
+            <Button text="Tuning Sheets" href="cars" />
+          </div>
+        </div>
+      </div>
+
+      {/* Widgets */}
+      <Widget
+        header="About"
+        text="The mission of this website is to provide the Gran Turismo community
+          more ways of using their cars against other drivers in fun curated
+          races."
+      />
+      <Widget
+        header="Lobbies"
+        text="Here are some lobbies starting soon. Check out the lobby page to start your own or use filters to find the perfect race for you!"
+        href="cars"
+      >
+        The 3 lobbies closest to starting goes here
+      </Widget>
+
       {session ? (
         <>
           Signed in as {session?.user?.name} <br />
-          <button onClick={() => signOut()}>Sign out</button>
+          <button className="btn" onClick={() => signOut()}>
+            Sign out
+          </button>
         </>
       ) : (
         <>
           Not signed in <br />
-          <button onClick={() => signIn()}>Sign in</button>
-          <button
-            onClick={() => {
-              const callbackUrl = window.location.href;
-              window.location.href = `/auth/signup?${new URLSearchParams({
-                callbackUrl,
-              })}`;
-            }}
-          >
+          <button className="btn" onClick={() => signIn()}>
+            Sign in
+          </button>
+          <button className="btn" onClick={() => signUp()}>
             Sign up
           </button>
         </>
       )}
-      <br />
-      <Link href={`/cars`}>View Cars</Link>
-
-      <h1>Welcome to your tRPC starter!</h1>
-      <p>
-        If you get stuck, check <a href="https://trpc.io">the docs</a>, write a
-        message in our <a href="https://trpc.io/discord">Discord-channel</a>, or
-        write a message in{' '}
-        <a href="https://github.com/trpc/trpc/discussions">
-          GitHub Discussions
-        </a>
-        .
-      </p>
-      <h2>
-        Latest Posts
-        {postsQuery.status === 'loading' && '(loading)'}
-      </h2>
-      <button
-        onClick={() => postsQuery.fetchPreviousPage()}
-        disabled={
-          !postsQuery.hasPreviousPage || postsQuery.isFetchingPreviousPage
-        }
-      >
-        {postsQuery.isFetchingPreviousPage
-          ? 'Loading more...'
-          : postsQuery.hasPreviousPage
-          ? 'Load More'
-          : 'Nothing more to load'}
-      </button>
-      {postsQuery.data?.pages.map((page, index) => (
-        <Fragment key={page.items[0]?.id || index}>
-          {page.items.map(
-            (item: {
-              id: Key | null | undefined;
-              title:
-                | string
-                | number
-                | boolean
-                | ReactElement<any, string | JSXElementConstructor<any>>
-                | ReactFragment
-                | ReactPortal
-                | null
-                | undefined;
-            }) => (
-              <article key={item.id}>
-                <h3>{item.title}</h3>
-                <Link href={`/post/${item.id}`}>View more</Link>
-              </article>
-            ),
-          )}
-        </Fragment>
-      ))}
-      <hr />
-      <h3>Add a Post</h3>
-      <form
-        onSubmit={async (e) => {
-          /**
-           * In a real app you probably don't want to use this manually
-           * Checkout React Hook Form - it works great with tRPC
-           * @see https://react-hook-form.com/
-           * @see https://kitchen-sink.trpc.io/react-hook-form
-           */
-          e.preventDefault();
-          const $form = e.currentTarget;
-          const values = Object.fromEntries(new FormData($form));
-          type Input = inferProcedureInput<AppRouter['post']['add']>;
-          //    ^?
-          const input: Input = {
-            title: values.title as string,
-            text: values.text as string,
-          };
-          try {
-            await addPost.mutateAsync(input);
-
-            $form.reset();
-          } catch (cause) {
-            console.error({ cause }, 'Failed to add post');
-          }
-        }}
-      >
-        <label htmlFor="title">Title:</label>
-        <br />
-        <input
-          id="title"
-          name="title"
-          type="text"
-          disabled={addPost.isLoading}
-        />
-
-        <br />
-        <label htmlFor="text">Text:</label>
-        <br />
-        <textarea id="text" name="text" disabled={addPost.isLoading} />
-        <br />
-        <input type="submit" disabled={addPost.isLoading} />
-        {addPost.error && (
-          <p style={{ color: 'red' }}>{addPost.error.message}</p>
-        )}
-      </form>
     </>
   );
 };
@@ -174,8 +75,9 @@ const IndexPage: NextPageWithLayout = () => {
 IndexPage.getLayout = function getLayout(component: ReactElement) {
   return (
     <>
-      <h1>index page h1 tag</h1>
+      <Navbar absolute={true} />
       {component}
+      <Footer />
     </>
   );
 };

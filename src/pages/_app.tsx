@@ -1,10 +1,12 @@
 import type { NextPage } from 'next';
 import type { AppType, AppProps } from 'next/app';
 import type { ReactElement, ReactNode } from 'react';
-import { DefaultLayout } from '~/components/DefaultLayout';
+import { DefaultLayout } from '~/frontend/components/DefaultLayout';
 import { trpc } from '~/utils/trpc';
+import '../frontend/styles/globals.scss';
 
 import { SessionProvider } from 'next-auth/react';
+import ProtectedPage from './protectedPage';
 
 // explanation of this file:
 // https://www.learnbestcoding.com/post/33/nextjs-template-layout
@@ -13,8 +15,8 @@ export type NextPageWithLayout<
   TProps = Record<string, unknown>,
   TInitialProps = TProps,
 > = NextPage<TProps, TInitialProps> & {
-  // getLayout?: (page: ReactElement) => ReactNode;
   getLayout?: (page: ReactElement, pageProps?: AppProps) => ReactNode;
+  isProtected?: boolean;
 };
 
 type AppPropsWithLayout = AppProps & {
@@ -25,12 +27,23 @@ const MyApp = (({
   Component,
   pageProps: { session, ...pageProps },
 }: AppPropsWithLayout) => {
+  // if a page has a specifc layout, use that one instead of the default one.
   const getLayout =
     Component.getLayout ?? ((page) => <DefaultLayout>{page}</DefaultLayout>);
+  // if the page is protected, wrap it with protectedPage component so that users must be logged in.
+  const isProtected = Component.isProtected;
 
   return (
     <SessionProvider session={session}>
-      {getLayout(<Component {...pageProps} />)}
+      <div className="min-h-screen">
+        {isProtected ? (
+          <ProtectedPage>
+            {getLayout(<Component {...pageProps} />)}
+          </ProtectedPage>
+        ) : (
+          getLayout(<Component {...pageProps} />)
+        )}
+      </div>
     </SessionProvider>
   );
 }) as AppType;

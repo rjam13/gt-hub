@@ -1,6 +1,5 @@
 import sha256 from 'crypto-js/sha256';
-import { getSession } from 'next-auth/react';
-import { GetServerSideProps, GetServerSidePropsContext } from 'next/types';
+import crypto from 'crypto';
 
 export const createUsername = (): string => {
   const a = [
@@ -22,35 +21,32 @@ export const createUsername = (): string => {
   return prefix + suffix + String(Math.floor(Math.random() * 1000));
 };
 
-export const hashPassword = (password: string) => {
-  return sha256(password).toString();
+export const signUp = () => {
+  const callbackUrl = window.location.href;
+  window.location.href = `/auth/signup?${new URLSearchParams({
+    callbackUrl,
+  })}`;
 };
 
-// redirectToSignin is used for redirecting user to signin with a callbackurl,
-// so that after signing in, they would be redirected back to their original page.
-// Normally used in getServersideProps like below:
-//
-// export const getServerSideProps: GetServerSideProps = async (context) => {
-//   const session = await getSession(context);
-//   if (!session) {
-//     return redirectToSignin(context);
-//   }
-//   return {
-//     props: {},
-//   };
-// };
-export const redirectToSignin = (context: GetServerSidePropsContext) => {
-  const callbackUrl =
-    'http://' +
-    (context.req.headers.host as string) +
-    (context.resolvedUrl as string);
+export const comparePassword = (password: string, salt: string) => {
+  return sha256(salt + password).toString();
+};
+
+export const newPassword = (
+  password: string,
+): {
+  salt: string;
+  passwordHash: string;
+} => {
+  const salt = createSalt();
   return {
-    redirect: {
-      permanent: false,
-      destination: `/auth/signin?${new URLSearchParams({
-        callbackUrl,
-      })}`,
-    },
-    props: {},
+    salt: salt,
+    passwordHash: sha256(salt + password).toString(),
   };
+};
+
+const createSalt = () => {
+  const buf = new Uint32Array(10);
+  crypto.getRandomValues(buf);
+  return buf.toString().replace(/\,/g, '');
 };

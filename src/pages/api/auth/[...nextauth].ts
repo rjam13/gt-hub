@@ -9,7 +9,7 @@ import {
   checkCredentialsSchema,
   defaultUserSelect,
 } from '~/schemas/userSchema';
-import { hashPassword } from '~/utils/user';
+import { comparePassword } from '~/utils/user';
 import { omit } from 'lodash';
 
 export const authOptions: NextAuthOptions = {
@@ -34,7 +34,10 @@ export const authOptions: NextAuthOptions = {
             where: { name: name },
             select: defaultUserSelect,
           });
-          if (user && user.password == hashPassword(password)) {
+          if (
+            user &&
+            user.password == comparePassword(password, user.salt ?? '')
+          ) {
             logger.debug('password correct');
             return omit(user, 'password');
           } else {

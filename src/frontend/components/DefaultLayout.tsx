@@ -1,5 +1,7 @@
 import Head from 'next/head';
 import { ReactNode } from 'react';
+import Navbar from './Navbar';
+import Footer from './Footer';
 
 type DefaultLayoutProps = { children: ReactNode };
 
@@ -12,8 +14,9 @@ export const DefaultLayout = ({ children }: DefaultLayoutProps) => {
       </Head>
 
       <main>
-        <h1>default layout h1 tag</h1>
+        <Navbar />
         {children}
+        <Footer />
       </main>
     </>
   );

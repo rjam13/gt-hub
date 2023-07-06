@@ -1,0 +1,80 @@
+@use 'mixins' as m;
+
+// This file is used as the base for tailwindCSS
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    color: white;
+    background: linear-gradient(
+      180deg,
+      #202d40 0%,
+      #323f47 49.48%,
+      #1b2c3d 100%
+    );
+    background-size: contain;
+  }
+
+  h1 {
+    @include m.clampSize(20, 46, 320, 1200);
+    font-weight: 400;
+    padding: 0;
+  }
+
+  h2 {
+    @include m.clampSize(16, 32, 320, 1200);
+    font-weight: 400;
+  }
+
+  h3 {
+    @include m.clampSize(14, 24, 320, 1200);
+    font-weight: 100;
+  }
+
+  p,
+  select {
+    @include m.clampSize(12, 18, 320, 1200);
+    padding: 0.25rem 0;
+    font-weight: 400;
+  }
+
+  .btn {
+    @include m.clampSize(12, 18, 320, 1200);
+    background: #148de6;
+    border-radius: 20px;
+    color: white;
+    cursor: pointer;
+    display: flex;
+    padding: 5px clamp(0.5rem, 1vw, 1rem);
+    margin: 0.5rem;
+    transition: 0.4s;
+    white-space: nowrap;
+  }
+
+  .btn:hover {
+    background-color: #127ac7;
+    color: white;
+  }
+
+  a {
+    @include m.clampSize(12, 20, 320, 1200);
+    text-decoration: none;
+    color: #148de6;
+    transition: 0.4s;
+  }
+
+  a:hover {
+    color: #127ac7;
+  }
+
+  // *** FOR TESTING ONLY ***
+  input[type='text'],
+  input[type='email'],
+  input[type='password'],
+  textarea {
+    background-color: black;
+  }
+}
