@@ -1,77 +1,55 @@
 import { trpc } from '../../utils/trpc';
-import { inferProcedureInput } from '@trpc/server';
 import { NextPageWithLayout } from '~/pages/_app';
-import { ReactElement, Fragment } from 'react';
-import type { AppRouter } from '~/server/routers/_app';
+import { Fragment } from 'react';
 import Link from 'next/dist/client/link';
+import Widget from '~/frontend/components/Widget';
+import Image from 'next/image';
+import manuLogoExample from '~/frontend/assets/manuLogoExample.png';
 
 const Cars: NextPageWithLayout = () => {
   const manufacturerQuery = trpc.manufacturer.getAll.useQuery(undefined);
-  const addManufacturer = trpc.manufacturer.add.useMutation({
-    onSuccess: () => {
-      void manufacturerQuery.refetch();
-    },
-  });
 
   return (
     <div>
-      <h1>Cars</h1>
-      <form
-        onSubmit={async (e) => {
-          e.preventDefault();
-          const $form = e.currentTarget;
-          const values = Object.fromEntries(new FormData($form));
-          type Input = inferProcedureInput<AppRouter['manufacturer']['add']>;
-          const input: Input = {
-            name: values.manufacturer as string,
-            yearFounded: Number(values.yearFounded) as number,
-            headquarters: values.headquarters as string,
-          };
-          try {
-            await addManufacturer.mutateAsync(input);
-            $form.reset();
-          } catch (cause) {
-            console.error({ cause }, 'Failed to add manufacturer');
-          }
-        }}
-      >
-        <label htmlFor="manufacturer">manufacturer:</label>
-        <br />
-        <input
-          id="manufacturer"
-          name="manufacturer"
-          type="text"
-          disabled={addManufacturer.isLoading}
-        />
-        <label htmlFor="yearFounded">yearFounded:</label>
-        <input
-          id="yearFounded"
-          name="yearFounded"
-          type="text"
-          disabled={addManufacturer.isLoading}
-        />
-        <label htmlFor="headquarters">headquarters:</label>
-        <input
-          id="headquarters"
-          name="headquarters"
-          type="text"
-          disabled={addManufacturer.isLoading}
-        />
-        <input type="submit" disabled={addManufacturer.isLoading} />
-        {addManufacturer.error && (
-          <p style={{ color: 'red' }}>{addManufacturer.error.message}</p>
-        )}
-      </form>
-      {manufacturerQuery.data?.map((manu, index) => (
-        <Fragment key={index}>
-          <Link href={`/cars/${manu.name}`}>
-            <div>
-              <b>{manu.name}</b>, {manu.yearFounded}, {manu.headquarters}
-            </div>
-          </Link>
-        </Fragment>
-      ))}
+      <Widget header="Manufacturers">
+        <div className="flex justify-center flex-wrap">
+          {manufacturerQuery.data?.map((manu, index) => (
+            <Fragment key={index}>{manufacturer(manu.name)}</Fragment>
+          ))}
+        </div>
+        {/* {manufacturerQuery.data?.map((manu, index) => (
+          <Fragment key={index}>
+            <Link href={`/cars/${manu.name}`}>
+              <div>
+                <b>{manu.name}</b>, {manu.yearFounded}, {manu.headquarters}
+              </div>
+            </Link>
+          </Fragment>
+        ))} */}
+      </Widget>
     </div>
+  );
+};
+
+/* interface Props {
+  text: string;
+} */
+
+const manufacturer = (text: string) => {
+  return (
+    <Link
+      href={`/cars/${text}`}
+      className="text-white hover:text-slate-300 border border-transparent hover:border-white w-[31%] aspect-square min-w-[110px] min-h-[110px] max-w-[250px] max-h-[250px] bg-select-box flex pt-4 pb-2.5 justify-between items-center flex-col m-1 rounded-md"
+    >
+      <Image
+        src={manuLogoExample}
+        alt="Manufacturer Example Logo"
+        className="h-7/12 w-7/12"
+      />
+      <div className="grow flex items-center">
+        <p className="font-light m-auto">{text}</p>
+      </div>
+    </Link>
   );
 };
 
