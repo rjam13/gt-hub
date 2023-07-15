@@ -12,7 +12,7 @@ import {
 import type { AppRouter } from '~/server/routers/_app';
 import Link from 'next/link';
 
-const example = () => {
+const Example = () => {
   const utils = trpc.useContext();
   const postsQuery = trpc.post.list.useInfiniteQuery(
     {
@@ -142,4 +142,4 @@ const example = () => {
   );
 };
 
-export default example;
+export default Example;

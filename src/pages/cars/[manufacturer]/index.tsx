@@ -22,7 +22,8 @@ import { trpc } from '~/utils/trpc';
 // }
 
 const ManufacturerPage: NextPageWithLayout = () => {
-  const name = useRouter().query.manufacturer as string;
+  const router = useRouter();
+  const name = router.query.manufacturer as string;
   const manufacturerQuery = trpc.manufacturer.byName.useQuery({ name });
 
   if (manufacturerQuery.error) {
@@ -56,4 +57,4 @@ const ManufacturerPage: NextPageWithLayout = () => {
 
 export default ManufacturerPage;
 
-ManufacturerPage.isProtected = true;
+// ManufacturerPage.isProtected = true;
