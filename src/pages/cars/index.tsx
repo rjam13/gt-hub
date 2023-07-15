@@ -29,7 +29,6 @@ const Cars: NextPageWithLayout = () => {
           };
           try {
             await addManufacturer.mutateAsync(input);
-
             $form.reset();
           } catch (cause) {
             console.error({ cause }, 'Failed to add manufacturer');
@@ -78,4 +77,4 @@ const Cars: NextPageWithLayout = () => {
 
 export default Cars;
 
-Cars.isProtected = true;
+// Cars.isProtected = true;

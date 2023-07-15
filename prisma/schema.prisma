@@ -237,10 +237,10 @@ enum propShaft {
 
 model TuningSheet {
   id                String       @id @default(uuid())
-  author            User?        @relation(fields: [authorId], references: [id], onDelete: Cascade)
-  authorId          String?
-  car               CarModel?    @relation(fields: [carId], references: [id], onDelete: SetNull)
-  carId             String?
+  author            User         @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  authorId          String
+  car               CarModel     @relation(fields: [carId], references: [id], onDelete: Cascade)
+  carId             String
   // information
   title             String       @db.VarChar(250)
   text              String       @db.VarChar(1000)
@@ -277,7 +277,7 @@ model TuningSheet {
   brakingSensFront  Int
   brakingSensRear   Int
   tvcDifferential   centerDiff   @default(none)
-  frontRearDis      String       @db.VarChar(10)
+  frontRearDis      String       @default("0 : 100") @db.VarChar(10)
   // aero
   downforceFront    Int          @default(0)
   downforceRear     Int          @default(0)

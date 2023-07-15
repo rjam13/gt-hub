@@ -142,7 +142,7 @@ export const authOptions: NextAuthOptions = {
       logger.debug(`session:session`, session, '\n\n');
       logger.debug(`session:token`, token, '\n\n');
       if (token) {
-        session.user.userId = token.userId;
+        session.user.userId = token.id;
         session.user.email = token.email;
         session.user.username = token.username;
       }

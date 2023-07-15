@@ -2,9 +2,12 @@ import { useRouter } from 'next/router';
 import { Fragment } from 'react';
 import { NextPageWithLayout } from '~/pages/_app';
 import { trpc } from '~/utils/trpc';
+import Link from 'next/link';
 
 const CarModelPage: NextPageWithLayout = () => {
-  const modelName = useRouter().query.carModel as string;
+  const router = useRouter();
+  const name = router.query.manufacturer as string;
+  const modelName = router.query.carModel as string;
   const tuningSheetQuery = trpc.tuningSheet.byCarModel.useQuery({
     name: modelName,
   });
@@ -14,13 +17,14 @@ const CarModelPage: NextPageWithLayout = () => {
   return (
     <div>
       {tuningSheetQuery.data?.map((sheet, index) => {
-        const pp = sheet.performancePoints;
         return (
           <Fragment key={index}>
-            <h2>{sheet.title}</h2>
-            <p>
-              <>{pp}</>
-            </p>
+            <Link href={`/cars/${name}/${modelName}/${sheet.id}`}>
+              <h2>{sheet.title}</h2>
+              <p>
+                <>{sheet.performancePoints}</>
+              </p>
+            </Link>
           </Fragment>
         );
       })}
@@ -30,4 +34,4 @@ const CarModelPage: NextPageWithLayout = () => {
 
 export default CarModelPage;
 
-CarModelPage.isProtected = true;
+// CarModelPage.isProtected = true;
