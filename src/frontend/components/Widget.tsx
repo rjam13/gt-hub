@@ -8,11 +8,14 @@ interface Props {
   header: string;
   text?: string;
   href?: string;
+  width?: string;
 }
 
-const Widget = ({ children, header, text, href = '' }: Props) => {
+const Widget = ({ children, header, text, href = '', width }: Props) => {
   return (
-    <div className="bg-widget-gradient shadow-widget rounded-md sm:mx-4 mb-5">
+    <div
+      className={`bg-widget-gradient shadow-widget rounded-md sm:mx-4 mb-5 ${width}`}
+    >
       <div className="my-3 mx-4">
         <div className="flex justify-between">
           <h2>{header}</h2>
