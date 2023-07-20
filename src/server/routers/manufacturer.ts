@@ -8,22 +8,16 @@ import { z } from 'zod';
  * It's important to always explicitly say which fields you want to return in order to not leak extra information
  * @see https://github.com/prisma/prisma/issues/9353
  */
+
 const defaultManufacturerSelect = Prisma.validator<Prisma.ManufacturerSelect>()(
   {
     id: true,
     name: true,
     yearFounded: true,
     headquarters: true,
+    models: true,
   },
 );
-
-const ManufacturerModelsSelect = Prisma.validator<Prisma.ManufacturerSelect>()({
-  id: true,
-  name: true,
-  yearFounded: true,
-  headquarters: true,
-  models: true,
-});
 
 export const manufacturerRouter = router({
   getAll: publicProcedure.query(({ ctx }) => {
@@ -41,7 +35,7 @@ export const manufacturerRouter = router({
       const { name } = input;
       const manufacturer = await ctx.prisma.manufacturer.findUnique({
         where: { name: name },
-        select: ManufacturerModelsSelect,
+        select: defaultManufacturerSelect,
       });
       if (!manufacturer) {
         throw new TRPCError({
