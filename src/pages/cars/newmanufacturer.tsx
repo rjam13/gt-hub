@@ -1,21 +1,13 @@
+import React from 'react';
 import { trpc } from '../../utils/trpc';
-import { inferProcedureInput } from '@trpc/server';
-import { NextPageWithLayout } from '~/pages/_app';
-import { ReactElement, Fragment } from 'react';
 import type { AppRouter } from '~/server/routers/_app';
-import Link from 'next/dist/client/link';
+import { inferProcedureInput } from '@trpc/server';
 
-const Cars: NextPageWithLayout = () => {
-  const manufacturerQuery = trpc.manufacturer.getAll.useQuery(undefined);
-  const addManufacturer = trpc.manufacturer.add.useMutation({
-    onSuccess: () => {
-      void manufacturerQuery.refetch();
-    },
-  });
+const newmanufacturer = () => {
+  const addManufacturer = trpc.manufacturer.add.useMutation({});
 
   return (
-    <div>
-      <h1>Cars</h1>
+    <>
       <form
         onSubmit={async (e) => {
           e.preventDefault();
@@ -62,19 +54,8 @@ const Cars: NextPageWithLayout = () => {
           <p style={{ color: 'red' }}>{addManufacturer.error.message}</p>
         )}
       </form>
-      {manufacturerQuery.data?.map((manu, index) => (
-        <Fragment key={index}>
-          <Link href={`/cars/${manu.name}`}>
-            <div>
-              <b>{manu.name}</b>, {manu.yearFounded}, {manu.headquarters}
-            </div>
-          </Link>
-        </Fragment>
-      ))}
-    </div>
+    </>
   );
 };
 
-export default Cars;
-
-// Cars.isProtected = true;
+export default newmanufacturer;
