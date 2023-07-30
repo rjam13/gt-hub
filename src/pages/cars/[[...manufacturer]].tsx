@@ -63,7 +63,7 @@ const Cars: NextPageWithLayout = () => {
             {manu.models.map((model, index) => (
               <Fragment key={index}>
                 <Link
-                  href="/"
+                  href={`/${model.name}`}
                   className="text-white hover:text-slate-300 border border-transparent hover:border-white bg-select-box flex justify-start items-center rounded-md h-12 gap-2 mx-4 my-2"
                 >
                   <div className="h-full w-4/12">

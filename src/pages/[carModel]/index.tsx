@@ -6,7 +6,6 @@ import Link from 'next/link';
 
 const CarModelPage: NextPageWithLayout = () => {
   const router = useRouter();
-  const name = router.query.manufacturer as string;
   const modelName = router.query.carModel as string;
   const tuningSheetQuery = trpc.tuningSheet.byCarModel.useQuery({
     name: modelName,
@@ -19,7 +18,7 @@ const CarModelPage: NextPageWithLayout = () => {
       {tuningSheetQuery.data?.map((sheet, index) => {
         return (
           <Fragment key={index}>
-            <Link href={`/cars/${name}/${modelName}/${sheet.id}`}>
+            <Link href={`/${modelName}/${sheet.id}`}>
               <h2>{sheet.title}</h2>
               <p>
                 <>{sheet.performancePoints}</>
