@@ -2,9 +2,15 @@ import React, { DragEvent } from 'react';
 import Image from 'next/image';
 import FilePreview from './FilePreview';
 import upload from '~/frontend/assets/upload.svg';
-import { UploadInfo } from '~/pages/upload';
+import { UploadState, UploadAction } from '~/pages/upload';
 
-const DropZone = ({ data, dispatch }: { data: UploadInfo; dispatch: any }) => {
+const DropZone = ({
+  data,
+  dispatch,
+}: {
+  data: UploadState;
+  dispatch: React.Dispatch<UploadAction>;
+}) => {
   // onDragEnter sets inDropZone to true
   const handleDragEnter = (e: DragEvent<HTMLDivElement>) => {
     e.preventDefault();
@@ -82,21 +88,12 @@ const DropZone = ({ data, dispatch }: { data: UploadInfo; dispatch: any }) => {
     // initialize formData object
     const formData = new FormData();
     // loop over files and add to formData
-    files.forEach((file: File) => formData.append('files', file));
+    files.forEach((file: File, index: number) =>
+      formData.append(`${index}`, file),
+    );
 
-    // Upload the files as a POST request to the server using fetch
-    // Note: /api/fileupload is not a real endpoint, it is just an example
-    const response = await fetch('/api/fileupload', {
-      method: 'POST',
-      body: formData,
-    });
-
-    //successful file upload
-    if (response.ok) {
-      alert('Files uploaded successfully');
-    } else {
-      // unsuccessful file upload
-      alert('Error uploading files');
+    for (const entry of formData.values()) {
+      console.log(entry);
     }
   };
 

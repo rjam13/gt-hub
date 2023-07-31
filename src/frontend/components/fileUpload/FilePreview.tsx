@@ -1,7 +1,7 @@
 import React from 'react';
-import { UploadInfo } from '~/pages/upload';
+import { UploadState } from '~/pages/upload';
 
-const FilePreview = ({ fileData }: { fileData: UploadInfo }) => {
+const FilePreview = ({ fileData }: { fileData: UploadState }) => {
   return (
     <div className="flex mt-4 gap-4">
       <div className="flex-col items-center">

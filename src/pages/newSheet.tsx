@@ -28,7 +28,7 @@ const NewSheet = () => {
             text: values.text as string,
             performancePoints: Number(values.performancePoints) as number,
             authorId: session?.user?.userId as string,
-            carId: 'e1b38143-1e0d-4a7e-aa56-c3419374956b', // 911 Turbo (930)
+            carId: 'f1d7b3e1-233d-4121-91b4-a8258195e291', // 911 Turbo (930)
             status: 'draft',
           };
           try {

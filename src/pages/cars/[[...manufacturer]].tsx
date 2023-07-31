@@ -7,6 +7,7 @@ import Image from 'next/image';
 import manuLogoExample from '~/frontend/assets/manuLogoExample.png';
 import exampleModel from '~/frontend/assets/porsche_911_Turbo_(930)_81.png';
 import { useRouter } from 'next/router';
+import { CldImage } from 'next-cloudinary';
 
 const Cars: NextPageWithLayout = () => {
   const router = useRouter();
@@ -31,18 +32,30 @@ const Cars: NextPageWithLayout = () => {
               <Fragment key={index}>
                 <Link
                   href={`/cars/${manu.name}`}
-                  className={`text-white hover:text-slate-300 border border-transparent hover:border-white w-[31%] aspect-square min-w-[110px] min-h-[110px] max-w-[250px] max-h-[250px] bg-select-box flex pt-4 pb-2.5 justify-between items-center flex-col m-1 rounded-md ${
+                  className={`text-white hover:text-slate-300 border border-transparent hover:border-white w-[31%] aspect-square min-w-[110px] min-h-[110px] max-w-[250px] max-h-[250px] bg-select-box pt-4 pb-2.5 m-1 rounded-md grid grid-rows-2 ${
                     manu.name === manufacturerSelected &&
                     'text-slate-300 border-white'
                   }
                   `}
                 >
-                  <Image
-                    src={manuLogoExample}
-                    alt="Manufacturer Example Logo"
-                    className="h-7/12 w-7/12"
+                  {/* <div className="h-7/12 w-7/12 flex flex-col justify-center bg-orange-500">
+                    <CldImage
+                      src={manu.image != null ? manu.image : ''}
+                      alt={`${manu.name} Logo`}
+                      width={400}
+                      height={400}
+                      className="h-full w-full object-contain overflow-hidden"
+                    />
+                  </div> */}
+                  {/* 70 25 */}
+                  <CldImage
+                    src={manu.image != null ? manu.image : ''}
+                    alt={`${manu.name} Logo`}
+                    width={400}
+                    height={400}
+                    className="h-full object-contain row-start-1 row-end-2 px-6"
                   />
-                  <div className="grow flex items-center">
+                  <div className="grow flex items-center row-start-2 row-end-3">
                     <p className="font-light m-auto">{manu.name}</p>
                   </div>
                 </Link>
