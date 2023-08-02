@@ -55,8 +55,9 @@
   }
 
   .btn:hover {
-    background-color: #127ac7;
-    color: white;
+    // background-color: #127ac7;
+    // color: white;
+    filter: brightness(85%);
   }
 
   a {
@@ -67,7 +68,7 @@
   }
 
   a:hover {
-    color: #127ac7;
+    filter: brightness(85%);
   }
 
   // *** FOR TESTING ONLY ***

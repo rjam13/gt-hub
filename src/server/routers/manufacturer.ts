@@ -15,6 +15,7 @@ const defaultManufacturerSelect = Prisma.validator<Prisma.ManufacturerSelect>()(
     name: true,
     yearFounded: true,
     headquarters: true,
+    image: true,
     models: true,
   },
 );

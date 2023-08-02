@@ -23,7 +23,8 @@ const SignIn = ({
       name: '',
       password: '',
     },
-    resolver: zodResolver(checkCredentialsSchema),
+    // NEEDS FIXING. This broke after prisma 5 update
+    // resolver: zodResolver(checkCredentialsSchema),
   });
 
   // const defaultBody = {
