@@ -32,7 +32,7 @@ const Cars: NextPageWithLayout = () => {
               <Fragment key={index}>
                 <Link
                   href={`/cars/${manu.name}`}
-                  className={`text-white hover:text-slate-300 border border-transparent hover:border-white w-[31%] aspect-square min-w-[110px] min-h-[110px] max-w-[250px] max-h-[250px] bg-select-box pt-4 pb-2.5 m-1 rounded-md grid grid-rows-[66%_33%] ${
+                  className={`text-white hover:text-slate-300 border border-transparent hover:border-white w-[31%] aspect-square min-w-[110px] min-h-[110px] max-w-[250px] max-h-[250px] bg-card pt-4 pb-2.5 m-1 rounded-md grid grid-rows-[66%_33%] ${
                     manu.name === manufacturerSelected &&
                     'text-slate-300 border-white'
                   }
@@ -77,7 +77,7 @@ const Cars: NextPageWithLayout = () => {
               <Fragment key={index}>
                 <Link
                   href={`/${model.name}`}
-                  className="text-white hover:text-slate-300 border border-transparent hover:border-white bg-select-box flex justify-start items-center rounded-md h-12 gap-2 mx-4 my-2"
+                  className="text-white hover:text-slate-300 border border-transparent hover:border-white bg-card flex justify-start items-center rounded-md h-12 gap-2 mx-4 my-2"
                 >
                   <div className="h-full w-4/12">
                     <Image

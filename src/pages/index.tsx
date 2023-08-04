@@ -9,6 +9,7 @@ import Widget from '~/frontend/components/Widget';
 import Navbar from '~/frontend/components/Navbar';
 import Footer from '~/frontend/components/Footer';
 import { ReactElement } from 'react';
+import LobbyCard from '~/frontend/components/LobbyCard';
 
 const IndexPage: NextPageWithLayout = () => {
   const { data: session } = useSession();
@@ -36,38 +37,42 @@ const IndexPage: NextPageWithLayout = () => {
       </div>
 
       {/* Widgets */}
-      <Widget
-        header="About"
-        text="The mission of this website is to provide the Gran Turismo community
+      <div className="flex flex-col items-center">
+        <Widget
+          header="About"
+          text="The mission of this website is to provide the Gran Turismo community
           more ways of using their cars against other drivers in fun curated
           races."
-      />
-      <Widget
-        header="Lobbies"
-        text="Here are some lobbies starting soon. Check out the lobby page to start your own or use filters to find the perfect race for you!"
-        href="cars"
-      >
-        The 3 lobbies closest to starting goes here
-      </Widget>
+        />
+        <Widget
+          header="Lobbies"
+          text="Here are some lobbies starting soon. Check out the lobby page to start your own or use filters to find the perfect race for you!"
+          href="cars"
+        >
+          <LobbyCard />
+          <LobbyCard />
+          <LobbyCard />
+        </Widget>
 
-      {session ? (
-        <>
-          Signed in as {session?.user?.name} <br />
-          <button className="btn" onClick={() => signOut()}>
-            Sign out
-          </button>
-        </>
-      ) : (
-        <>
-          Not signed in <br />
-          <button className="btn" onClick={() => signIn()}>
-            Sign in
-          </button>
-          <button className="btn" onClick={() => signUp()}>
-            Sign up
-          </button>
-        </>
-      )}
+        {session ? (
+          <>
+            Signed in as {session?.user?.name} <br />
+            <button className="btn" onClick={() => signOut()}>
+              Sign out
+            </button>
+          </>
+        ) : (
+          <>
+            Not signed in <br />
+            <button className="btn" onClick={() => signIn()}>
+              Sign in
+            </button>
+            <button className="btn" onClick={() => signUp()}>
+              Sign up
+            </button>
+          </>
+        )}
+      </div>
     </>
   );
 };

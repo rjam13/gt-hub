@@ -19,30 +19,30 @@
   }
 
   h1 {
-    @include m.clampSize(20, 46, 320, 1200);
+    @include m.clampSize(20, 46, 390, 1200);
     font-weight: 400;
     padding: 0;
   }
 
   h2 {
-    @include m.clampSize(16, 32, 320, 1200);
+    @include m.clampSize(16, 32, 390, 1200);
     font-weight: 400;
   }
 
   h3 {
-    @include m.clampSize(14, 24, 320, 1200);
-    font-weight: 100;
+    @include m.clampSize(14, 24, 390, 1200);
+    font-weight: 400;
   }
 
+  h4,
   p,
   select {
-    @include m.clampSize(12, 18, 320, 1200);
-    padding: 0.25rem 0;
+    @include m.clampSize(12, 18, 390, 1200);
     font-weight: 400;
   }
 
   .btn {
-    @include m.clampSize(12, 18, 320, 1200);
+    @include m.clampSize(12, 18, 390, 1200);
     background: #148de6;
     border-radius: 20px;
     color: white;
@@ -61,7 +61,7 @@
   }
 
   a {
-    @include m.clampSize(12, 20, 320, 1200);
+    @include m.clampSize(12, 20, 390, 1200);
     text-decoration: none;
     color: #148de6;
     transition: 0.4s;

@@ -14,7 +14,7 @@ interface Props {
 const Widget = ({ children, header, text, href = '', width }: Props) => {
   return (
     <div
-      className={`bg-widget-gradient shadow-widget rounded-md sm:mx-4 mb-5 ${width}`}
+      className={`bg-widget-gradient shadow-widget rounded-md sm:mx-4 mb-5 max-w-3xl ${width}`}
     >
       <div className="my-3 mx-4">
         <div className="flex justify-between">
