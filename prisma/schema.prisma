@@ -42,18 +42,20 @@ model Session {
 }
 
 model User {
-  id            String        @id @default(cuid())
-  name          String?       @unique
-  email         String?       @unique
+  id            String           @id @default(cuid())
+  name          String?          @unique
+  email         String?          @unique
   emailVerified DateTime?
   password      String?
   salt          String?
   image         String?
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
   accounts      Account[]
   sessions      Session[]
-  TuningSheet   TuningSheet[]
+  tuningSheets  TuningSheet[]
+  lobbiesJoined UsersInLobbies[]
+  lobbySettings LobbySettings[]
 }
 
 model VerificationToken {
@@ -78,6 +80,117 @@ model Post {
   updatedAt DateTime @default(now()) @updatedAt
 }
 
+// ==================== LOBBY ====================
+
+enum LobbyTags {
+  // Tires
+  streetTires
+  streetSoft
+  streetMedium
+  streetHard
+  comfortTires
+  comfortSoft
+  comfortMedium
+  comfortHard
+  raceTires
+  raceSoft
+  raceMedium
+  raceHard
+  // Car Types
+  oneSpec
+  multiClass
+  // Weather
+  rain
+  dry
+  customWeather
+  // Race Length
+  endurance
+  sprint
+  // Vibe
+  serious
+  relaxed
+  // need more
+}
+
+enum carCategory {
+  gr1
+  gr2
+  gr3
+  gr4
+  grB
+  grX
+}
+
+model Track {
+  name         String        @id
+  image        String?
+  location     String
+  trackLayouts TrackLayout[]
+}
+
+model TrackLayout {
+  id            String          @id @default(cuid())
+  name          String
+  image         String?
+  track         Track           @relation(fields: [trackName], references: [name])
+  trackName     String
+  lobbySettings LobbySettings[]
+}
+
+model Lobby {
+  id              String           @id @default(cuid())
+  createdAt       DateTime         @default(now())
+  startTime       DateTime
+  // host is in the list of UsersInLobbies where the property isHost is set to true
+  usersInLobbies  UsersInLobbies[]
+  lobbySettings   LobbySettings    @relation(fields: [lobbySettingsId], references: [id])
+  lobbySettingsId String
+}
+
+model LobbySettings {
+  lobbies       Lobby[]
+  id            String          @id @default(cuid())
+  title         String
+  description   String?
+  tags          LobbyTags[]     @default([])
+  creator       User            @relation(fields: [userId], references: [id])
+  userId        String
+  ppRating      Int             @db.SmallInt
+  grRating      carCategory[]   @default([])
+  tracks        TrackLayout[]
+  allowedCars   CarsInLobbies[]
+  maxPower      Int?
+  minimumWeight Int?
+}
+
+model UsersInLobbies {
+  user     User     @relation(fields: [userId], references: [id])
+  userId   String
+  lobby    Lobby    @relation(fields: [lobbyId], references: [id])
+  lobbyId  String
+  joinedAt DateTime @default(now())
+  isHost   Boolean
+
+  @@id([userId, lobbyId])
+}
+
+model CarsInLobbies {
+  car             CarModel      @relation(fields: [carId], references: [id])
+  carId           String
+  LobbySettings   LobbySettings @relation(fields: [LobbySettingsId], references: [id])
+  LobbySettingsId String
+  // tuning sheets are optional
+  tuningSheet     TuningSheet   @relation(fields: [tuningSheetId], references: [id])
+  tuningSheetId   String
+
+  @@id([carId, LobbySettingsId])
+}
+
+// model tuningSheetsInLobbies {
+//   lobby   Lobby  @relation(fields: [lobbyId], references: [id])
+//   lobbyId String
+// }
+
 // ==================== CARS ====================
 
 model Manufacturer {
@@ -90,12 +203,13 @@ model Manufacturer {
 }
 
 model CarModel {
-  id             String        @id @default(uuid())
+  id             String          @id @default(uuid())
   name           String
   image          String?
-  manufacturer   Manufacturer? @relation(fields: [manufacturerId], references: [id], onDelete: Cascade)
+  manufacturer   Manufacturer?   @relation(fields: [manufacturerId], references: [id], onDelete: Cascade)
   manufacturerId String?
   tuningSheets   TuningSheet[]
+  lobbies        CarsInLobbies[]
 }
 
 // ==================== TUNING SHEETS ====================
@@ -236,23 +350,24 @@ enum propShaft {
 }
 
 model TuningSheet {
-  id                String       @id @default(uuid())
-  author            User         @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  id                String          @id @default(uuid())
+  author            User            @relation(fields: [authorId], references: [id], onDelete: Cascade)
   authorId          String
-  car               CarModel     @relation(fields: [carId], references: [id], onDelete: Cascade)
+  car               CarModel        @relation(fields: [carId], references: [id], onDelete: Cascade)
   carId             String
+  lobbies           CarsInLobbies[]
   // information
-  title             String       @db.VarChar(250)
-  text              String       @db.VarChar(1000)
-  createdAt         DateTime     @default(now())
-  updatedAt         DateTime     @default(now()) @updatedAt
-  status            UploadStatus @default(draft)
-  performancePoints Decimal      @db.Decimal(5, 2)
+  title             String          @db.VarChar(250)
+  text              String          @db.VarChar(1000)
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @default(now()) @updatedAt
+  status            UploadStatus    @default(draft)
+  performancePoints Decimal         @db.Decimal(5, 2)
   // tires
-  tiresFront        tire         @default(comfortHard)
-  tiresRear         tire         @default(comfortHard)
+  tiresFront        tire            @default(comfortHard)
+  tiresRear         tire            @default(comfortHard)
   // suspension
-  suspension        suspension   @default(normal)
+  suspension        suspension      @default(normal)
   heightFront       Int
   heightRear        Int
   rollBarFront      Int
@@ -261,77 +376,77 @@ model TuningSheet {
   compressionRear   Int
   expansionFront    Int
   expansionRear     Int
-  naturalFreqFront  Decimal      @db.Decimal(4, 2)
-  naturalFreqRear   Decimal      @db.Decimal(4, 2)
-  camberFront       Decimal      @db.Decimal(3, 1)
-  camberRear        Decimal      @db.Decimal(3, 1)
+  naturalFreqFront  Decimal         @db.Decimal(4, 2)
+  naturalFreqRear   Decimal         @db.Decimal(4, 2)
+  camberFront       Decimal         @db.Decimal(3, 1)
+  camberRear        Decimal         @db.Decimal(3, 1)
   // negative values = toe out
-  toeFront          Decimal      @db.Decimal(3, 2)
-  toeRear           Decimal      @db.Decimal(3, 2)
+  toeFront          Decimal         @db.Decimal(3, 2)
+  toeRear           Decimal         @db.Decimal(3, 2)
   // differential
-  differential      differential @default(normal)
+  differential      differential    @default(normal)
   initTorqueFront   Int
   initTorqueRear    Int
   accelSensFront    Int
   accelSensRear     Int
   brakingSensFront  Int
   brakingSensRear   Int
-  tvcDifferential   centerDiff   @default(none)
-  frontRearDis      String       @default("0 : 100") @db.VarChar(10)
+  tvcDifferential   centerDiff      @default(none)
+  frontRearDis      String          @default("0 : 100") @db.VarChar(10)
   // aero
-  downforceFront    Int          @default(0)
-  downforceRear     Int          @default(0)
+  downforceFront    Int             @default(0)
+  downforceRear     Int             @default(0)
   // ecu
-  ecu               ecu          @default(normal)
-  ecuOutput         Int          @default(100)
+  ecu               ecu             @default(normal)
+  ecuOutput         Int             @default(100)
   // performance adjustment
-  ballast           Int          @default(0)
-  ballastPos        Int          @default(0)
-  powerRes          Int          @default(100)
+  ballast           Int             @default(0)
+  ballastPos        Int             @default(0)
+  powerRes          Int             @default(100)
   // transmission
-  transmission      transmission @default(normal)
-  topSpeed          Int          @default(0)
-  gears             Int[]        @default([])
+  transmission      transmission    @default(normal)
+  topSpeed          Int             @default(0)
+  gears             Int[]           @default([])
   // nitrous/overtake
-  nitrous           nitrous      @default(none)
-  nitrousOutput     Int?         @default(0)
+  nitrous           nitrous         @default(none)
+  nitrousOutput     Int?            @default(0)
   // supercharger
-  turbo             turbo        @default(none)
-  antiLag           Boolean      @default(false)
-  antiLagSetting    antiLag      @default(off)
-  intercooler       intercooler  @default(normal)
-  supercharger      supercharger @default(none)
+  turbo             turbo           @default(none)
+  antiLag           Boolean         @default(false)
+  antiLagSetting    antiLag         @default(off)
+  intercooler       intercooler     @default(normal)
+  supercharger      supercharger    @default(none)
   // intake & exhaust
-  airCleaner        airCleaner   @default(normal)
-  muffler           muffler      @default(normal)
-  manifold          manifold     @default(normal)
+  airCleaner        airCleaner      @default(normal)
+  muffler           muffler         @default(normal)
+  manifold          manifold        @default(normal)
   // brakes
-  brakes            brakes       @default(normal)
-  brakePads         brakePads    @default(normal)
-  handBrake         Boolean      @default(false)
-  handBrakeTorq     Int          @default(0)
-  brakeBalance      Boolean      @default(false)
-  brakeFRBalance    Int          @default(0)
+  brakes            brakes          @default(normal)
+  brakePads         brakePads       @default(normal)
+  handBrake         Boolean         @default(false)
+  handBrakeTorq     Int             @default(0)
+  brakeBalance      Boolean         @default(false)
+  brakeFRBalance    Int             @default(0)
   // steering
-  steeringKit       Boolean      @default(false)
-  fourWheelSteering Boolean      @default(false)
-  rearSteerAngle    Int          @default(0)
+  steeringKit       Boolean         @default(false)
+  fourWheelSteering Boolean         @default(false)
+  rearSteerAngle    Int             @default(0)
   // drivetrain
-  clutch            clutch       @default(normal)
-  propShaft         propShaft    @default(normal)
+  clutch            clutch          @default(normal)
+  propShaft         propShaft       @default(normal)
   // engine tuning
-  boreUp            Boolean      @default(false)
-  strokeUp          Boolean      @default(false)
-  engineBalanceTune Boolean      @default(false)
-  polishPorts       Boolean      @default(false)
-  highLiftCamShafts Boolean      @default(false)
-  TitaniumRodsPist  Boolean      @default(false)
-  RacingCrankShaft  Boolean      @default(false)
-  HighCompPistons   Boolean      @default(false)
+  boreUp            Boolean         @default(false)
+  strokeUp          Boolean         @default(false)
+  engineBalanceTune Boolean         @default(false)
+  polishPorts       Boolean         @default(false)
+  highLiftCamShafts Boolean         @default(false)
+  TitaniumRodsPist  Boolean         @default(false)
+  RacingCrankShaft  Boolean         @default(false)
+  HighCompPistons   Boolean         @default(false)
   // bodywork
   // 0 = no weight reduction, 
   // 1 = stage 1 weight reduction, 
   // 2 = stage 2 weight reduction, etc.
-  weightReduction   Int          @default(0)
-  bodyRigidity      Boolean      @default(false)
+  weightReduction   Int             @default(0)
+  bodyRigidity      Boolean         @default(false)
 }
