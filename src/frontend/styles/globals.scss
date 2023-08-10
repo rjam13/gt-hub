@@ -48,10 +48,12 @@
     color: white;
     cursor: pointer;
     display: flex;
+    align-items: center;
     padding: 5px clamp(0.5rem, 1vw, 1rem);
     margin: 0.5rem;
     transition: 0.4s;
     white-space: nowrap;
+    width: fit-content;
   }
 
   .btn:hover {

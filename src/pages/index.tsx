@@ -30,7 +30,7 @@ const IndexPage: NextPageWithLayout = () => {
             </p>
           </div>
           <div className="mt-[15px] flex justify-center">
-            <Button text="Lobbies" href="/" />
+            <Button text="Lobbies" href="lobbies" />
             <Button text="Tuning Sheets" href="cars" />
           </div>
         </div>
@@ -47,7 +47,8 @@ const IndexPage: NextPageWithLayout = () => {
         <Widget
           header="Lobbies"
           text="Here are some lobbies starting soon. Check out the lobby page to start your own or use filters to find the perfect race for you!"
-          href="cars"
+          href="lobbies"
+          className="w-full"
         >
           <LobbyCard />
           <LobbyCard />

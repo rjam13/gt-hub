@@ -1,22 +1,25 @@
-import React from 'react';
+import React, { MouseEventHandler } from 'react';
 import ArrowIcon from '~/frontend/assets/arrow.svg';
 import Link from 'next/link';
 import Image from 'next/image';
 
 interface Props {
   text: string;
-  href: string;
+  href?: string;
+  onClick?: MouseEventHandler<HTMLDivElement>;
 }
 
-const Button = ({ text, href }: Props) => {
-  return (
+const Button = ({ text, href = '', onClick }: Props) => {
+  return href != '' ? (
     <Link href={href} className="btn">
       {text}
       <Image src={ArrowIcon} alt="arrow icon" className="ml-[41px] h-full" />
-      {/* <div className="ml-[41px] my-0 h-full aspect-10/13 ">
-        <ArrowIcon height="100%" width="100%" viewBox="0 0 10 13" />
-      </div> */}
     </Link>
+  ) : (
+    <div className="btn" onClick={onClick}>
+      {text}
+      <Image src={ArrowIcon} alt="arrow icon" className="ml-[41px] h-full" />
+    </div>
   );
 };
 
