@@ -1,12 +1,17 @@
-import { NextPageWithLayout } from '~/pages/_app';
 import { trpc } from '~/utils/trpc';
-import { Fragment, useState } from 'react';
+import { Dispatch, Fragment, SetStateAction, useState } from 'react';
 import Widget from '~/frontend/components/Widget';
 import exampleModel from '~/frontend/assets/porsche_911_Turbo_(930)_81.png';
-import ManufacturerCard from '~/frontend/components/ManufacturerCard';
-import CarModelEntry from '~/frontend/components/CarModelEntry';
+import ManufacturerCard from './ManufacturerCard';
+import CarModelEntry from './CarModelEntry';
 
-const Cars: NextPageWithLayout = () => {
+interface Props {
+  // useState string[] state and setState function
+  selectedModels: string[];
+  setSelectedModels: Dispatch<SetStateAction<string[]>>;
+}
+
+const MultipleCarSelect = ({ selectedModels, setSelectedModels }: Props) => {
   const [manuSelected, setManuSelected] = useState('');
 
   const manufacturerQuery = trpc.manufacturer.getAll.useQuery(undefined);
@@ -57,7 +62,19 @@ const Cars: NextPageWithLayout = () => {
                 <CarModelEntry
                   name={model.name}
                   image={exampleModel}
-                  href={`/${model.name}`}
+                  isSelected={selectedModels.includes(model.name)}
+                  onClick={() => {
+                    if (selectedModels.includes(model.name)) {
+                      setSelectedModels((prevState) =>
+                        prevState.filter((item) => item !== model.name),
+                      );
+                    } else {
+                      setSelectedModels((prevState) => [
+                        ...prevState,
+                        model.name,
+                      ]);
+                    }
+                  }}
                 />
               </Fragment>
             ))}
@@ -68,6 +85,4 @@ const Cars: NextPageWithLayout = () => {
   );
 };
 
-export default Cars;
-
-// Cars.isProtected = true;
+export default MultipleCarSelect;

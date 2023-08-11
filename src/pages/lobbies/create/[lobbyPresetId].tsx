@@ -5,13 +5,15 @@ import type { AppRouter } from '~/server/routers/_app';
 import { inferProcedureInput } from '@trpc/server';
 import { useRouter } from 'next/router';
 import Button from '~/frontend/components/Button';
-import CarSelect from '~/frontend/components/CarSelect';
+import CarSelect from '~/frontend/components/MultipleCarSelect';
 
 const CreateLobbySettings = () => {
   const router = useRouter();
   const slug = router.query.manufacturer?.[0];
   let lobbySetting = '';
   if (slug !== undefined) lobbySetting = slug;
+
+  const [selectedModels, setSelectedModels] = useState<string[]>([]);
 
   const [modal, setModal] = useState(false);
   console.log(modal);
@@ -36,7 +38,10 @@ const CreateLobbySettings = () => {
             }}
           />
           <div className="fixed z-[1000] top-1/2 left-1/2 -translate-y-1/2 -translate-x-1/2 w-screen">
-            <CarSelect />
+            <CarSelect
+              selectedModels={selectedModels}
+              setSelectedModels={setSelectedModels}
+            />
           </div>
           {/* <div className="myModal">
             <img
@@ -84,6 +89,7 @@ const CreateLobbySettings = () => {
                 const $form = e.currentTarget;
                 const values = Object.fromEntries(new FormData($form));
                 console.log(values);
+                console.log(selectedModels);
                 // type Input = inferProcedureInput<
                 //   AppRouter['manufacturer']['add']
                 // >;
