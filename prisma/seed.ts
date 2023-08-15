@@ -83,6 +83,11 @@ async function main() {
       yearFounded: 1911,
       headquarters: 'Detroit, Michigan, U.S.',
       image: 'Manufacturer Logos/pbjemrxjtwubqbrxealy',
+      models: {
+        createMany: {
+          data: [{ name: 'Corvette' }],
+        },
+      },
     },
   });
   await prisma.manufacturer.upsert({
@@ -93,6 +98,11 @@ async function main() {
       yearFounded: 1916,
       headquarters: 'Munich, Germany',
       image: 'Manufacturer Logos/irzmzgrr3ax0r0sbqgb1',
+      models: {
+        createMany: {
+          data: [{ name: 'M3' }],
+        },
+      },
     },
   });
   await prisma.manufacturer.upsert({
@@ -103,6 +113,11 @@ async function main() {
       yearFounded: 1937,
       headquarters: 'Toyota City, Aichi, Japan',
       image: 'Manufacturer Logos/s814k6fqsntc3mpq76fm',
+      models: {
+        createMany: {
+          data: [{ name: 'Supra' }],
+        },
+      },
     },
   });
   await prisma.manufacturer.upsert({
@@ -113,6 +128,11 @@ async function main() {
       yearFounded: 1963,
       headquarters: "Sant'Agata Bolognese, Emilia-Romagna, Italy",
       image: 'Manufacturer Logos/jdjomfimaip35gk0voe9',
+      models: {
+        createMany: {
+          data: [{ name: 'Huracan' }],
+        },
+      },
     },
   });
   await prisma.manufacturer.upsert({
@@ -123,6 +143,11 @@ async function main() {
       yearFounded: 1937,
       headquarters: 'Wolfsburg, Germany',
       image: 'Manufacturer Logos/dkw8kuvzvnioipxfl35o',
+      models: {
+        createMany: {
+          data: [{ name: 'IDR' }],
+        },
+      },
     },
   });
   await prisma.manufacturer.upsert({
@@ -133,6 +158,11 @@ async function main() {
       yearFounded: 1973,
       headquarters: 'Japan',
       image: 'Manufacturer Logos/nuqyrvcpqxmwyq26dvsw',
+      models: {
+        createMany: {
+          data: [{ name: 'Honda' }],
+        },
+      },
     },
   });
   await prisma.manufacturer.upsert({
@@ -143,6 +173,11 @@ async function main() {
       yearFounded: 1974,
       headquarters: 'Tomisato, Japan',
       image: 'Manufacturer Logos/okylbfgijtwobpvyzz0u',
+      models: {
+        createMany: {
+          data: [{ name: 'RX7' }],
+        },
+      },
     },
   });
 }

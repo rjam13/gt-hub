@@ -13,7 +13,21 @@ export const tuningSheetRouter = router({
       const { name } = input;
       // looks for tuning sheets where it matches the car's name
       const tuningSheets = await ctx.prisma.tuningSheet.findMany({
-        where: { car: { name: name } }, // looks for tun
+        where: { car: { name: name } },
+      });
+      return tuningSheets;
+    }),
+  byMultipleCarModel: publicProcedure
+    .input(
+      z.object({
+        names: z.string().array(),
+      }),
+    )
+    .query(async ({ input, ctx }) => {
+      const { names } = input;
+      // looks for tuning sheets where it matches the cars' name
+      const tuningSheets = await ctx.prisma.tuningSheet.findMany({
+        where: { car: { name: { in: names } } },
       });
       return tuningSheets;
     }),

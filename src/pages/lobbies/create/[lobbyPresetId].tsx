@@ -1,11 +1,14 @@
-import React, { useState } from 'react';
+import React, { Fragment, useEffect, useState } from 'react';
 import Widget from '~/frontend/components/Widget';
 import { trpc } from '~/utils/trpc';
 import type { AppRouter } from '~/server/routers/_app';
 import { inferProcedureInput } from '@trpc/server';
 import { useRouter } from 'next/router';
 import Button from '~/frontend/components/Button';
-import CarSelect from '~/frontend/components/MultipleCarSelect';
+import MultipleModelSelect, {
+  selectedModel,
+} from '~/frontend/components/MultipleModelSelect';
+import Modal from '~/frontend/Modal';
 
 const CreateLobbySettings = () => {
   const router = useRouter();
@@ -13,73 +16,82 @@ const CreateLobbySettings = () => {
   let lobbySetting = '';
   if (slug !== undefined) lobbySetting = slug;
 
-  const [selectedModels, setSelectedModels] = useState<string[]>([]);
+  // Tracks which cars are allowed
+  const [selectedModels, setSelectedModels] = useState<selectedModel[]>([]);
+  // updates a specific selected model with a tuning sheet
+  const updateSelectedModel = (
+    index: number,
+    property: { tuningSheetId: string; tuningSheetTitle: string },
+  ) => {
+    setSelectedModels(
+      selectedModels.map((model, i) =>
+        i === index ? { ...model, ...property } : { ...model },
+      ),
+    );
+  };
 
-  const [modal, setModal] = useState(false);
-  console.log(modal);
+  // Tracks if the "Choose Cars "modal is open
+  const [modalModelSelect, setModalModelSelect] = useState(false);
 
-  // const manufacturerQuery = trpc.manufacturer.getAll.useQuery(undefined);
+  // tracks if tuning sheet modal is open of any car,
+  // -1 == not open,
+  // any other number == index of selectedModels
+  const [currentModelIndex, setCurrentModelIndex] = useState(-1);
 
-  // if (manufacturerQuery.status !== 'success') {
-  //   return <>Loading...</>;
-  // }
-
-  // const { data } = manufacturerQuery;
-  // const addManufacturer = trpc.manufacturer.add.useMutation({});
+  const currentCarName = selectedModels[currentModelIndex]?.name ?? '';
+  const { data, refetch } = trpc.tuningSheet.byCarModel.useQuery(
+    {
+      name: currentCarName,
+    },
+    { enabled: false },
+  );
+  // whenever currentModelIndex is changed, refetch data.
+  useEffect(() => {
+    if (currentModelIndex !== -1) refetch();
+  }, [currentModelIndex, refetch]);
 
   return (
     <>
-      {modal && (
-        <>
-          <div
-            className="fixed z-[900] bg-black/[0.6] w-screen h-screen top-1/2 left-1/2 -translate-y-1/2 -translate-x-1/2 "
-            onClick={() => {
-              setModal(false);
-            }}
-          />
-          <div className="fixed z-[1000] top-1/2 left-1/2 -translate-y-1/2 -translate-x-1/2 w-screen">
-            <CarSelect
-              selectedModels={selectedModels}
-              setSelectedModels={setSelectedModels}
-            />
-          </div>
-          {/* <div className="myModal">
-            <img
-              onClick={() => {
-                setIsOpen(false);
-              }}
-              tabIndex={0}
-              className="myModalXIcon"
-              src={xicon}
-              alt="X button to go back"
-            />
-            <h3>Joining Game</h3>
-            {data[gameSelected.index]}
-            <div className="myModalSection">
-              <SelectCharacter
-                selectedCO={selectedCO}
-                setSelectedCO={setSelectedCO}
+      <Modal
+        open={modalModelSelect}
+        onClose={() => {
+          setModalModelSelect(false);
+        }}
+      >
+        <MultipleModelSelect
+          selectedModels={selectedModels}
+          setSelectedModels={setSelectedModels}
+        />
+      </Modal>
+
+      <Modal
+        open={currentModelIndex != -1}
+        onClose={() => {
+          setCurrentModelIndex(-1);
+        }}
+      >
+        {`${selectedModels[currentModelIndex]?.name} Tuning Sheets`}
+        {data?.map((sheet, index) => {
+          return (
+            <div key={index}>
+              <h2>{sheet.title}</h2>
+              <p>
+                <>{sheet.performancePoints}</>
+              </p>
+              <Button
+                onClick={() => {
+                  updateSelectedModel(currentModelIndex, {
+                    tuningSheetId: sheet.id,
+                    tuningSheetTitle: sheet.title,
+                  });
+                }}
+                text="add"
               />
             </div>
-            <button
-              className="btn"
-              style={{ width: '200px', 'font-size': '24px' }}
-              onClick={() => {
-                const data = {
-                  gameId: gameSelected.gameId,
-                  selectedCO: selectedCO,
-                };
-                axios.post('/joinGame', data, null).then((res) => {
-                  console.log(res);
-                  navigate('/currentgames');
-                });
-              }}
-            >
-              Join
-            </button>
-          </div> */}
-        </>
-      )}
+          );
+        })}
+      </Modal>
+
       <div className="flex flex-col items-center">
         <Widget header="Create Lobby Settings" className="w-full">
           <div className="flex flex-col">
@@ -90,49 +102,35 @@ const CreateLobbySettings = () => {
                 const values = Object.fromEntries(new FormData($form));
                 console.log(values);
                 console.log(selectedModels);
-                // type Input = inferProcedureInput<
-                //   AppRouter['manufacturer']['add']
-                // >;
-                // const input: Input = {
-                //   name: values.manufacturer as string,
-                //   yearFounded: Number(values.yearFounded) as number,
-                //   headquarters: values.headquarters as string,
-                // };
-                // try {
-                //   await addManufacturer.mutateAsync(input);
-                //   $form.reset();
-                // } catch (cause) {
-                //   console.error({ cause }, 'Failed to add manufacturer');
-                // }
               }}
             >
               <label htmlFor="title">title:</label>
-              <input
-                id="title"
-                name="title"
-                type="text"
-                // disabled={addManufacturer.isLoading}
-              />
+              <input id="title" name="title" type="text" />
               <br />
               <label htmlFor="description">description:</label>
-              <input
-                id="description"
-                name="description"
-                type="text"
-                // disabled={addManufacturer.isLoading}
-              />
+              <input id="description" name="description" type="text" />
               <br />
-
               {/* TO DO: Choose cars here, there should be a modal that shows the manufacturer widget 
             and car model widget where a user is able to select and deselect cars */}
               <Button
                 text="Choose Cars"
                 onClick={() => {
-                  setModal(true);
+                  setModalModelSelect(true);
                 }}
               />
               {/* TO DO: Choose tuning sheets here, there should be a drop down for each car selected. 
             Each drop down should have all the tuning sheets of their car. Should be optional */}
+              {selectedModels.map((model, index) => (
+                <Fragment key={index}>
+                  <div
+                    onClick={() => {
+                      setCurrentModelIndex(index);
+                    }}
+                  >
+                    {model.name}
+                  </div>
+                </Fragment>
+              ))}
 
               <label htmlFor="tracks">Choose Tracks:</label>
               <div className="text-black">
@@ -150,6 +148,7 @@ const CreateLobbySettings = () => {
                   <option value="streetTires">streetTires</option>
                 </select>
               </div>
+
               <label htmlFor="grRating">gr rating:</label>
               <div className="text-black">
                 <select name="grRating" multiple id="grRating">
@@ -161,49 +160,27 @@ const CreateLobbySettings = () => {
                   <option value="grb">grb</option>
                 </select>
               </div>
+
               <br />
               <label htmlFor="ppRating">ppRating:</label>
-              <input
-                id="ppRating"
-                name="ppRating"
-                type="text"
-                // disabled={addManufacturer.isLoading}
-              />
+              <input id="ppRating" name="ppRating" type="text" />
+
               <br />
               <label htmlFor="maxPower">maxPower:</label>
-              <input
-                id="maxPower"
-                name="maxPower"
-                type="text"
-                // disabled={addManufacturer.isLoading}
-              />
+              <input id="maxPower" name="maxPower" type="text" />
+
               <br />
               <label htmlFor="minimumWeight">minimumWeight:</label>
-              <input
-                id="minimumWeight"
-                name="minimumWeight"
-                type="text"
-                // disabled={addManufacturer.isLoading}
-              />
-              <br />
+              <input id="minimumWeight" name="minimumWeight" type="text" />
 
+              <br />
               <h3>
                 <label htmlFor="startTime">startTime:</label>
               </h3>
-              <input
-                id="startTime"
-                name="startTime"
-                type="datetime-local"
-                // disabled={addManufacturer.isLoading}
-              />
+              <input id="startTime" name="startTime" type="datetime-local" />
+
               <br />
-              <input
-                type="submit"
-                // disabled={addManufacturer.isLoading}
-              />
-              {/* {addManufacturer.error && (
-              <p style={{ color: 'red' }}>{addManufacturer.error.message}</p>
-            )} */}
+              <input type="submit" />
             </form>
           </div>
         </Widget>
