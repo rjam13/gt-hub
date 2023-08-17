@@ -1,6 +1,19 @@
 import { router, protectedProcedure, publicProcedure } from '../trpc';
 import { z } from 'zod';
 import { UploadStatus } from '@prisma/client';
+import { Prisma } from '@prisma/client';
+
+const defaultTuningSheetSelect = Prisma.validator<Prisma.TuningSheetSelect>()({
+  id: true,
+  author: true,
+  authorId: true,
+  car: true,
+  carId: true,
+  title: true,
+  text: true,
+  updatedAt: true,
+  performancePoints: true,
+});
 
 export const tuningSheetRouter = router({
   byCarModel: publicProcedure
@@ -14,9 +27,11 @@ export const tuningSheetRouter = router({
       // looks for tuning sheets where it matches the car's name
       const tuningSheets = await ctx.prisma.tuningSheet.findMany({
         where: { car: { name: name } },
+        select: defaultTuningSheetSelect,
       });
       return tuningSheets;
     }),
+
   byMultipleCarModel: publicProcedure
     .input(
       z.object({
@@ -28,9 +43,11 @@ export const tuningSheetRouter = router({
       // looks for tuning sheets where it matches the cars' name
       const tuningSheets = await ctx.prisma.tuningSheet.findMany({
         where: { car: { name: { in: names } } },
+        select: defaultTuningSheetSelect,
       });
       return tuningSheets;
     }),
+
   byId: publicProcedure
     .input(
       z.object({
@@ -42,6 +59,7 @@ export const tuningSheetRouter = router({
       // looks for a specific tuning sheet using its id
       const tuningSheet = await ctx.prisma.tuningSheet.findUnique({
         where: { id: id },
+        select: defaultTuningSheetSelect,
       });
       // const carModel = await ctx.prisma.carModel.findUnique({
       //   where: { id: tuningSheet?.carId },
@@ -51,6 +69,7 @@ export const tuningSheetRouter = router({
       // });
       return tuningSheet;
     }),
+
   add: protectedProcedure
     .input(
       z.object({

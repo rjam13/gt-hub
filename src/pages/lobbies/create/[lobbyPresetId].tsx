@@ -8,7 +8,9 @@ import Button from '~/frontend/components/Button';
 import MultipleModelSelect, {
   selectedModel,
 } from '~/frontend/components/MultipleModelSelect';
-import Modal from '~/frontend/Modal';
+import Modal from '~/frontend/components/Modal';
+import { lobbyTags, carCategory, TrackLayout } from '@prisma/client';
+import { isObjectIncluded } from '~/utils/misc';
 
 const CreateLobbySettings = () => {
   const router = useRouter();
@@ -16,12 +18,15 @@ const CreateLobbySettings = () => {
   let lobbySetting = '';
   if (slug !== undefined) lobbySetting = slug;
 
-  // Tracks which cars are allowed
+  // tracks which cars are allowed
   const [selectedModels, setSelectedModels] = useState<selectedModel[]>([]);
   // updates a specific selected model with a tuning sheet
   const updateSelectedModel = (
     index: number,
-    property: { tuningSheetId: string; tuningSheetTitle: string },
+    property: {
+      tuningSheetId: string | undefined;
+      tuningSheetTitle: string | undefined;
+    },
   ) => {
     setSelectedModels(
       selectedModels.map((model, i) =>
@@ -29,19 +34,17 @@ const CreateLobbySettings = () => {
       ),
     );
   };
-
-  // Tracks if the "Choose Cars "modal is open
-  const [modalModelSelect, setModalModelSelect] = useState(false);
+  // tracks if the "Choose Cars "modal is open
+  const [modelSelectModal, setModelSelectModal] = useState(false);
 
   // tracks if tuning sheet modal is open of any car,
   // -1 == not open,
   // any other number == index of selectedModels
   const [currentModelIndex, setCurrentModelIndex] = useState(-1);
-
-  const currentCarName = selectedModels[currentModelIndex]?.name ?? '';
-  const { data, refetch } = trpc.tuningSheet.byCarModel.useQuery(
+  const currentModelName = selectedModels[currentModelIndex]?.name ?? '';
+  const { data: tuningSheets, refetch } = trpc.tuningSheet.byCarModel.useQuery(
     {
-      name: currentCarName,
+      name: currentModelName,
     },
     { enabled: false },
   );
@@ -50,12 +53,21 @@ const CreateLobbySettings = () => {
     if (currentModelIndex !== -1) refetch();
   }, [currentModelIndex, refetch]);
 
+  const { data: tracks } = trpc.lobbySettings.tracks.useQuery();
+  const [selectedTrackLayouts, setSelectedTrackLayouts] = useState<
+    TrackLayout[]
+  >([]);
+  // Checks if track of name is inside selectedTrackLayouts
+  const isTrackLayoutSelected = (list: TrackLayout[], name: string) =>
+    isObjectIncluded<TrackLayout>(list, name, 'name');
+
   return (
     <>
+      {/* ===== modelSelectModal ===== */}
       <Modal
-        open={modalModelSelect}
+        open={modelSelectModal}
         onClose={() => {
-          setModalModelSelect(false);
+          setModelSelectModal(false);
         }}
       >
         <MultipleModelSelect
@@ -64,6 +76,7 @@ const CreateLobbySettings = () => {
         />
       </Modal>
 
+      {/* ===== currentModelIndex Modal ===== */}
       <Modal
         open={currentModelIndex != -1}
         onClose={() => {
@@ -71,7 +84,7 @@ const CreateLobbySettings = () => {
         }}
       >
         {`${selectedModels[currentModelIndex]?.name} Tuning Sheets`}
-        {data?.map((sheet, index) => {
+        {tuningSheets?.map((sheet, index) => {
           return (
             <div key={index}>
               <h2>{sheet.title}</h2>
@@ -85,7 +98,11 @@ const CreateLobbySettings = () => {
                     tuningSheetTitle: sheet.title,
                   });
                 }}
-                text="add"
+                text={
+                  selectedModels[currentModelIndex]?.tuningSheetId == sheet.id
+                    ? 'successfully added'
+                    : 'add'
+                }
               />
             </div>
           );
@@ -102,78 +119,146 @@ const CreateLobbySettings = () => {
                 const values = Object.fromEntries(new FormData($form));
                 console.log(values);
                 console.log(selectedModels);
+                console.log(selectedTrackLayouts);
               }}
             >
+              {/* ===== TITLE ===== */}
               <label htmlFor="title">title:</label>
               <input id="title" name="title" type="text" />
               <br />
+
+              {/* ===== DESCRIPTION ===== */}
               <label htmlFor="description">description:</label>
               <input id="description" name="description" type="text" />
               <br />
-              {/* TO DO: Choose cars here, there should be a modal that shows the manufacturer widget 
-            and car model widget where a user is able to select and deselect cars */}
+
+              {/* ===== CHOOSE CAR MODELS ===== */}
               <Button
                 text="Choose Cars"
                 onClick={() => {
-                  setModalModelSelect(true);
+                  setModelSelectModal(true);
                 }}
               />
-              {/* TO DO: Choose tuning sheets here, there should be a drop down for each car selected. 
-            Each drop down should have all the tuning sheets of their car. Should be optional */}
+
+              {/* ===== CAR MODELS SELECTED ===== */}
+              {/* TO DO: Implement a better way of finding tuning sheets for a car */}
               {selectedModels.map((model, index) => (
                 <Fragment key={index}>
-                  <div
+                  <Button
                     onClick={() => {
                       setCurrentModelIndex(index);
                     }}
-                  >
-                    {model.name}
-                  </div>
+                    text={model.name}
+                  />
+                  {model.tuningSheetId !== undefined && (
+                    <div>
+                      <span
+                        onClick={() => {
+                          updateSelectedModel(index, {
+                            tuningSheetId: undefined,
+                            tuningSheetTitle: undefined,
+                          });
+                        }}
+                        className="text-red-600"
+                      >
+                        X
+                      </span>
+                      Tuning Sheet: {model.tuningSheetTitle}
+                    </div>
+                  )}
                 </Fragment>
               ))}
 
-              <label htmlFor="tracks">Choose Tracks:</label>
-              <div className="text-black">
-                <select name="tracks" multiple id="tracks">
-                  <option value="spa">spa</option>
-                  <option value="suzuka">suzuka</option>
-                </select>
+              {/* ===== TRACK SELECTION ===== */}
+
+              <legend>Choose Tracks:</legend>
+              <div>
+                {tracks?.map((track, index) => (
+                  <Fragment key={index}>
+                    <h4>{track.name}</h4>
+                    {track.trackLayouts.map((layout, index) => (
+                      <Fragment key={index}>
+                        <input
+                          id={layout.id}
+                          type="checkbox"
+                          name="tracks"
+                          checked={isTrackLayoutSelected(
+                            selectedTrackLayouts,
+                            layout.name,
+                          )}
+                          onChange={() => {
+                            return;
+                          }}
+                          onClick={() => {
+                            if (
+                              isTrackLayoutSelected(
+                                selectedTrackLayouts,
+                                layout.name,
+                              )
+                            ) {
+                              setSelectedTrackLayouts((prevState) =>
+                                prevState.filter(
+                                  (item) => item.name !== layout.name,
+                                ),
+                              );
+                            } else {
+                              setSelectedTrackLayouts((prevState) => [
+                                ...prevState,
+                                layout,
+                              ]);
+                            }
+                          }}
+                        />
+                        <label htmlFor={layout.id}>{layout.name}</label>
+                        <br />
+                      </Fragment>
+                    ))}
+                  </Fragment>
+                ))}
               </div>
 
               <h3>optional:</h3>
+              {/* ===== TAGS ===== */}
               <label htmlFor="tags">Choose Tags:</label>
               <div className="text-black">
                 <select name="tags" multiple id="tags">
-                  <option value="rain">rain</option>
-                  <option value="streetTires">streetTires</option>
+                  {Object.entries(lobbyTags).map(([key, value], i) => (
+                    <option key={i} value={value}>
+                      {value}
+                    </option>
+                  ))}
                 </select>
               </div>
 
+              {/* ===== GR RATING ===== */}
               <label htmlFor="grRating">gr rating:</label>
               <div className="text-black">
                 <select name="grRating" multiple id="grRating">
-                  <option value="gr1">gr1</option>
-                  <option value="gr2">gr2</option>
-                  <option value="gr3">gr3</option>
-                  <option value="gr4">gr4</option>
-                  <option value="grx">grx</option>
-                  <option value="grb">grb</option>
+                  {Object.entries(carCategory).map(([key, value], i) => (
+                    <option key={i} value={value}>
+                      {value}
+                    </option>
+                  ))}
                 </select>
               </div>
-
               <br />
+
+              {/* ===== PP RATING ===== */}
               <label htmlFor="ppRating">ppRating:</label>
               <input id="ppRating" name="ppRating" type="text" />
-
               <br />
+
+              {/* ===== MAX POWER ===== */}
               <label htmlFor="maxPower">maxPower:</label>
               <input id="maxPower" name="maxPower" type="text" />
-
               <br />
+
+              {/* ===== MINIMUM WEIGHT ===== */}
               <label htmlFor="minimumWeight">minimumWeight:</label>
               <input id="minimumWeight" name="minimumWeight" type="text" />
-
               <br />
+
+              {/* ===== START TIME ===== */}
               <h3>
                 <label htmlFor="startTime">startTime:</label>
               </h3>

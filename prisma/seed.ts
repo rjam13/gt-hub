@@ -20,6 +20,8 @@ async function main() {
   //   },
   //   update: {},
   // });
+
+  // ==================== CARS ====================
   await prisma.manufacturer.upsert({
     where: { name: 'Porsche' },
     update: {},
@@ -176,6 +178,54 @@ async function main() {
       models: {
         createMany: {
           data: [{ name: 'RX7' }],
+        },
+      },
+    },
+  });
+
+  // ==================== TRACKS ====================
+  await prisma.track.upsert({
+    where: { name: 'Tokyo Expressway' },
+    update: {},
+    create: {
+      name: 'Tokyo Expressway',
+      location: 'Tokyo, Japan',
+      trackLayouts: {
+        createMany: {
+          data: [
+            { name: 'Central Inner Loop' },
+            { name: 'Central Outer Loop' },
+            { name: 'East Inner Loop' },
+            { name: 'East Outer Loop' },
+            { name: 'South Inner Loop' },
+            { name: 'South Outer Loop' },
+          ],
+        },
+      },
+    },
+  });
+  await prisma.track.upsert({
+    where: { name: 'Grand Valley' },
+    update: {},
+    create: {
+      name: 'Grand Valley',
+      location: 'Big Sur, California, USA',
+      trackLayouts: {
+        createMany: {
+          data: [{ name: 'Highway 1' }, { name: 'South' }],
+        },
+      },
+    },
+  });
+  await prisma.track.upsert({
+    where: { name: 'Michelin Raceway Road Atlanta' },
+    update: {},
+    create: {
+      name: 'Michelin Raceway Road Atlanta',
+      location: 'Braselton, Georgia, United States',
+      trackLayouts: {
+        createMany: {
+          data: [{ name: 'Full Course' }],
         },
       },
     },

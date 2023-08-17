@@ -4,6 +4,7 @@ import Widget from '~/frontend/components/Widget';
 import exampleModel from '~/frontend/assets/porsche_911_Turbo_(930)_81.png';
 import ManufacturerCard from './ManufacturerCard';
 import CarModelEntry from './CarModelEntry';
+import { isObjectIncluded } from '~/utils/misc';
 
 export interface selectedModel {
   name: string;
@@ -17,15 +18,13 @@ interface Props {
   setSelectedModels: React.Dispatch<React.SetStateAction<selectedModel[]>>;
 }
 
-// Checks if an object with certain name is inside selectedModel[]
-const isSelected = (list: selectedModel[], name: string) =>
-  list.filter(function (e) {
-    return e.name === name;
-  }).length > 0;
-
 // Note: this component is coupled with src/pages/lobbies/create/[lobbyPresetId].tsx, mainly due to selectedModel.
 const MultipleModelSelect = ({ selectedModels, setSelectedModels }: Props) => {
   const [manuSelected, setManuSelected] = useState('');
+
+  // Checks if an object with certain name is inside selectedModel[]
+  const isSelected = (list: selectedModel[], name: string) =>
+    isObjectIncluded<selectedModel>(list, name, 'name');
 
   const manufacturerQuery = trpc.manufacturer.getAll.useQuery(undefined);
   if (manufacturerQuery.status !== 'success') {
@@ -75,7 +74,7 @@ const MultipleModelSelect = ({ selectedModels, setSelectedModels }: Props) => {
                   image={exampleModel}
                   isSelected={isSelected(selectedModels, model.name)}
                   onClick={() => {
-                    // add/remove model in selectedModels
+                    // remove and add model in selectedModels
                     if (isSelected(selectedModels, model.name)) {
                       setSelectedModels((prevState) =>
                         prevState.filter((item) => item.name !== model.name),
@@ -83,7 +82,11 @@ const MultipleModelSelect = ({ selectedModels, setSelectedModels }: Props) => {
                     } else {
                       setSelectedModels((prevState) => [
                         ...prevState,
-                        { name: model.name },
+                        {
+                          name: model.name,
+                          tuningSheetId: undefined,
+                          tuningSheetTitle: undefined,
+                        },
                       ]);
                     }
                   }}

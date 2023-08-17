@@ -82,7 +82,7 @@ model Post {
 
 // ==================== LOBBY ====================
 
-enum LobbyTags {
+enum lobbyTags {
   // Tires
   streetTires
   streetSoft
@@ -152,10 +152,10 @@ model LobbySettings {
   id            String          @id @default(cuid())
   title         String
   description   String?
-  tags          LobbyTags[]     @default([])
+  tags          lobbyTags[]     @default([])
   creator       User            @relation(fields: [userId], references: [id])
   userId        String
-  ppRating      Int             @db.SmallInt
+  ppRating      Int?             @db.SmallInt
   grRating      carCategory[]   @default([])
   tracks        TrackLayout[]
   allowedCars   CarsInLobbies[]

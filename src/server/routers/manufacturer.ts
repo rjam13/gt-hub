@@ -26,6 +26,7 @@ export const manufacturerRouter = router({
       select: defaultManufacturerSelect,
     });
   }),
+
   byName: publicProcedure
     .input(
       z.object({
@@ -46,6 +47,7 @@ export const manufacturerRouter = router({
       }
       return manufacturer;
     }),
+
   add: publicProcedure
     .input(
       z.object({
