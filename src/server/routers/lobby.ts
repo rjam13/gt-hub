@@ -10,7 +10,7 @@ import { prisma } from '~/server/prisma';
 export const lobbyRouter = router({
   createSettings: protectedProcedure
     .input(lobbySettingsSchema)
-    .query(async ({ input, ctx }) => {
+    .mutation(async ({ input, ctx }) => {
       console.log(input);
     }),
   tracks: publicProcedure.query(async () => {

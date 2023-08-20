@@ -1,8 +1,6 @@
 import React, { Fragment, useEffect, useState } from 'react';
 import Widget from '~/frontend/components/Widget';
 import { trpc } from '~/utils/trpc';
-import type { AppRouter } from '~/server/routers/_app';
-import { inferProcedureInput } from '@trpc/server';
 import { useRouter } from 'next/router';
 import Button from '~/frontend/components/Button';
 import MultipleModelSelect, {
@@ -12,14 +10,34 @@ import Modal from '~/frontend/components/Modal';
 import { lobbyTags, carCategory, TrackLayout } from '@prisma/client';
 import { camelCaseToWords, isObjectIncluded } from '~/utils/misc';
 import { useSession } from 'next-auth/react';
+import { SubmitHandler, useForm } from 'react-hook-form';
+import { ILobbySettings, lobbySettingsSchema } from '~/schemas/lobbySchema';
+import { zodResolver } from '@hookform/resolvers/zod';
 
 const CreateLobbySettings = () => {
   const { data: session } = useSession();
+
+  // For prefilling data using url slug
   const router = useRouter();
   const slug = router.query.manufacturer?.[0];
   let lobbySetting = '';
   if (slug !== undefined) lobbySetting = slug;
 
+  const { register, setValue, handleSubmit } = useForm<ILobbySettings>({
+    defaultValues: { userId: session?.user?.userId },
+    resolver: zodResolver(lobbySettingsSchema),
+  });
+  const submitSettings = trpc.lobby.createSettings.useMutation();
+  const onSubmit: SubmitHandler<ILobbySettings> = async (values) => {
+    console.log(values);
+    try {
+      await submitSettings.mutateAsync(values);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  // ========== CAR MODELS ==========
   // tracks which cars are allowed
   const [selectedModels, setSelectedModels] = useState<selectedModel[]>([]);
   // updates a specific selected model with a tuning sheet
@@ -36,9 +54,13 @@ const CreateLobbySettings = () => {
       ),
     );
   };
+  useEffect(() => {
+    setValue('allowedCars', selectedModels);
+  }, [selectedModels, setValue]);
   // tracks if the "Choose Cars "modal is open
   const [modelSelectModal, setModelSelectModal] = useState(false);
 
+  // ========== SELECTED CAR MODEL TUNING SHEETS ==========
   // tracks if tuning sheet modal is open of any car,
   // -1 == not open,
   // any other number == index of selectedModels
@@ -50,11 +72,12 @@ const CreateLobbySettings = () => {
     },
     { enabled: false },
   );
-  // whenever currentModelIndex is changed, refetch data.
+  // whenever currentModelIndex is changed, refetch data (tuning sheets).
   useEffect(() => {
     if (currentModelIndex !== -1) refetch();
   }, [currentModelIndex, refetch]);
 
+  // ========== TRACKS ==========
   const { data: tracks } = trpc.lobby.tracks.useQuery();
   const [selectedTrackLayouts, setSelectedTrackLayouts] = useState<
     TrackLayout[]
@@ -62,11 +85,20 @@ const CreateLobbySettings = () => {
   // Checks if track of name is inside selectedTrackLayouts
   const isTrackLayoutSelected = (list: TrackLayout[], name: string) =>
     isObjectIncluded<TrackLayout>(list, name, 'name');
+  useEffect(() => {
+    setValue('tracks', selectedTrackLayouts);
+  }, [selectedTrackLayouts, setValue]);
 
-  // tags
+  // ========== TAGS ==========
   const [tags, setTags] = useState<lobbyTags[]>([]);
-  // gr rating
-  const [gRRating, setGRRating] = useState<carCategory[]>([]);
+  useEffect(() => {
+    setValue('tags', tags);
+  }, [tags, setValue]);
+  // ========== GR RATING ==========
+  const [grRating, setGRRating] = useState<carCategory[]>([]);
+  useEffect(() => {
+    setValue('grRating', grRating);
+  }, [grRating, setValue]);
 
   return (
     <>
@@ -119,36 +151,19 @@ const CreateLobbySettings = () => {
       <div className="flex flex-col items-center">
         <Widget header="Create Lobby Settings" className="w-full">
           <div className="flex flex-col">
-            <form
-              onSubmit={async (e) => {
-                e.preventDefault();
-                const $form = e.currentTarget;
-                const formValues = Object.fromEntries(new FormData($form));
-                type Input = inferProcedureInput<
-                  AppRouter['lobby']['createSettings']
-                >;
-                // ***** TO DO *****
-                const input: Input = {
-                  ...formValues,
-                  // these keys correspond to the db model attributes
-                  // tags: [...tags],
-                  tags: [...tags],
-                  userId: session?.user?.userId as string,
-                  grRating: [...gRRating],
-                  tracks: [...selectedTrackLayouts],
-                  allowedCars: [...selectedModels],
-                };
-                console.log(input);
-              }}
-            >
+            <form onSubmit={handleSubmit(onSubmit)}>
               {/* ===== TITLE ===== */}
               <label htmlFor="title">title:</label>
-              <input id="title" name="title" type="text" />
+              <input id="title" type="text" {...register('title')} />
               <br />
 
               {/* ===== DESCRIPTION ===== */}
               <label htmlFor="description">description:</label>
-              <input id="description" name="description" type="text" />
+              <input
+                id="description"
+                type="text"
+                {...register('description')}
+              />
               <br />
 
               {/* ===== CHOOSE CAR MODELS ===== */}
@@ -273,20 +288,20 @@ const CreateLobbySettings = () => {
               <legend>GR Rating:</legend>
               <div>
                 {Object.keys(carCategory).map((v, index) => {
-                  const value: (typeof gRRating)[number] =
-                    v as (typeof gRRating)[number];
+                  const value: (typeof grRating)[number] =
+                    v as (typeof grRating)[number];
                   return (
                     <Fragment key={index}>
                       <input
                         id={value}
                         type="checkbox"
                         name="grRating"
-                        checked={gRRating.includes(value)}
+                        checked={grRating.includes(value)}
                         onChange={() => {
                           return;
                         }}
                         onClick={() => {
-                          if (gRRating.includes(value)) {
+                          if (grRating.includes(value)) {
                             setGRRating((prevState) =>
                               prevState.filter((e) => e !== value),
                             );
@@ -305,20 +320,34 @@ const CreateLobbySettings = () => {
 
               {/* ===== PP RATING ===== */}
               <label htmlFor="ppRating">ppRating:</label>
-              <input id="ppRating" name="ppRating" type="text" />
+              <input
+                id="ppRating"
+                type="text"
+                {...register('ppRating', { valueAsNumber: true })}
+              />
               <br />
 
               {/* ===== MAX POWER ===== */}
               <label htmlFor="maxPower">maxPower:</label>
-              <input id="maxPower" name="maxPower" type="text" />
+              <input
+                id="maxPower"
+                type="text"
+                {...register('maxPower', { valueAsNumber: true })}
+              />
               <br />
 
               {/* ===== MINIMUM WEIGHT ===== */}
               <label htmlFor="minimumWeight">minimumWeight:</label>
-              <input id="minimumWeight" name="minimumWeight" type="text" />
+              <input
+                id="minimumWeight"
+                type="text"
+                {...register('minimumWeight', { valueAsNumber: true })}
+              />
               <br />
 
               {/* ===== START TIME ===== */}
+              {/* This is not being passed to the backend at the moment */}
+              {/* This page is for now a create lobby settings page rather than lobbies themselves */}
               <h3>
                 <label htmlFor="startTime">startTime:</label>
               </h3>
