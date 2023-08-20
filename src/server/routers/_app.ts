@@ -6,7 +6,7 @@ import { manufacturerRouter } from './manufacturer';
 import { postRouter } from './post';
 import { userRouter } from './user';
 import { tuningSheetRouter } from './tuningSheet';
-import { lobbySettingsRouter } from './lobbySettings';
+import { lobbyRouter } from './lobby';
 
 export const appRouter = router({
   healthcheck: publicProcedure.query(() => 'yay!'),
@@ -15,7 +15,7 @@ export const appRouter = router({
   manufacturer: manufacturerRouter,
   user: userRouter,
   tuningSheet: tuningSheetRouter,
-  lobbySettings: lobbySettingsRouter,
+  lobby: lobbyRouter,
 });
 
 export type AppRouter = typeof appRouter;

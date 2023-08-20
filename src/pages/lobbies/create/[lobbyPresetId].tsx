@@ -10,9 +10,11 @@ import MultipleModelSelect, {
 } from '~/frontend/components/MultipleModelSelect';
 import Modal from '~/frontend/components/Modal';
 import { lobbyTags, carCategory, TrackLayout } from '@prisma/client';
-import { isObjectIncluded } from '~/utils/misc';
+import { camelCaseToWords, isObjectIncluded } from '~/utils/misc';
+import { useSession } from 'next-auth/react';
 
 const CreateLobbySettings = () => {
+  const { data: session } = useSession();
   const router = useRouter();
   const slug = router.query.manufacturer?.[0];
   let lobbySetting = '';
@@ -53,13 +55,18 @@ const CreateLobbySettings = () => {
     if (currentModelIndex !== -1) refetch();
   }, [currentModelIndex, refetch]);
 
-  const { data: tracks } = trpc.lobbySettings.tracks.useQuery();
+  const { data: tracks } = trpc.lobby.tracks.useQuery();
   const [selectedTrackLayouts, setSelectedTrackLayouts] = useState<
     TrackLayout[]
   >([]);
   // Checks if track of name is inside selectedTrackLayouts
   const isTrackLayoutSelected = (list: TrackLayout[], name: string) =>
     isObjectIncluded<TrackLayout>(list, name, 'name');
+
+  // tags
+  const [tags, setTags] = useState<lobbyTags[]>([]);
+  // gr rating
+  const [gRRating, setGRRating] = useState<carCategory[]>([]);
 
   return (
     <>
@@ -116,10 +123,22 @@ const CreateLobbySettings = () => {
               onSubmit={async (e) => {
                 e.preventDefault();
                 const $form = e.currentTarget;
-                const values = Object.fromEntries(new FormData($form));
-                console.log(values);
-                console.log(selectedModels);
-                console.log(selectedTrackLayouts);
+                const formValues = Object.fromEntries(new FormData($form));
+                type Input = inferProcedureInput<
+                  AppRouter['lobby']['createSettings']
+                >;
+                // ***** TO DO *****
+                const input: Input = {
+                  ...formValues,
+                  // these keys correspond to the db model attributes
+                  // tags: [...tags],
+                  tags: [...tags],
+                  userId: session?.user?.userId as string,
+                  grRating: [...gRRating],
+                  tracks: [...selectedTrackLayouts],
+                  allowedCars: [...selectedModels],
+                };
+                console.log(input);
               }}
             >
               {/* ===== TITLE ===== */}
@@ -170,7 +189,6 @@ const CreateLobbySettings = () => {
               ))}
 
               {/* ===== TRACK SELECTION ===== */}
-
               <legend>Choose Tracks:</legend>
               <div>
                 {tracks?.map((track, index) => (
@@ -219,27 +237,69 @@ const CreateLobbySettings = () => {
 
               <h3>optional:</h3>
               {/* ===== TAGS ===== */}
-              <label htmlFor="tags">Choose Tags:</label>
-              <div className="text-black">
-                <select name="tags" multiple id="tags">
-                  {Object.entries(lobbyTags).map(([key, value], i) => (
-                    <option key={i} value={value}>
-                      {value}
-                    </option>
-                  ))}
-                </select>
+              <legend>Choose Tags:</legend>
+              <div>
+                {Object.keys(lobbyTags).map((v, index) => {
+                  const value: (typeof tags)[number] =
+                    v as (typeof tags)[number];
+                  return (
+                    <Fragment key={index}>
+                      <input
+                        id={value}
+                        type="checkbox"
+                        name="tags"
+                        checked={tags.includes(value)}
+                        onChange={() => {
+                          return;
+                        }}
+                        onClick={() => {
+                          if (tags.includes(value)) {
+                            setTags((prevState) =>
+                              prevState.filter((e) => e !== value),
+                            );
+                          } else {
+                            setTags((prevState) => [...prevState, value]);
+                          }
+                        }}
+                      />
+                      <label htmlFor={value}>{camelCaseToWords(value)}</label>
+                      <br />
+                    </Fragment>
+                  );
+                })}
               </div>
 
               {/* ===== GR RATING ===== */}
-              <label htmlFor="grRating">gr rating:</label>
-              <div className="text-black">
-                <select name="grRating" multiple id="grRating">
-                  {Object.entries(carCategory).map(([key, value], i) => (
-                    <option key={i} value={value}>
-                      {value}
-                    </option>
-                  ))}
-                </select>
+              <legend>GR Rating:</legend>
+              <div>
+                {Object.keys(carCategory).map((v, index) => {
+                  const value: (typeof gRRating)[number] =
+                    v as (typeof gRRating)[number];
+                  return (
+                    <Fragment key={index}>
+                      <input
+                        id={value}
+                        type="checkbox"
+                        name="grRating"
+                        checked={gRRating.includes(value)}
+                        onChange={() => {
+                          return;
+                        }}
+                        onClick={() => {
+                          if (gRRating.includes(value)) {
+                            setGRRating((prevState) =>
+                              prevState.filter((e) => e !== value),
+                            );
+                          } else {
+                            setGRRating((prevState) => [...prevState, value]);
+                          }
+                        }}
+                      />
+                      <label htmlFor={value}>{camelCaseToWords(value)}</label>
+                      <br />
+                    </Fragment>
+                  );
+                })}
               </div>
               <br />
 
@@ -275,3 +335,5 @@ const CreateLobbySettings = () => {
 };
 
 export default CreateLobbySettings;
+
+CreateLobbySettings.isProtected = true;

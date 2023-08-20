@@ -1,3 +1,5 @@
+// To do: Eventually, this file should be broken up into separate files that categorizes the functions
+
 // Used to check if an object with a value of "value" on property "criteria" exists on "list" of type "T"
 // Typically used on useState lists of objects
 /**
@@ -15,3 +17,8 @@ export const isObjectIncluded = <T>(
   list.filter(function (e) {
     return e[criteria as keyof typeof e] === value;
   }).length > 0;
+
+export function camelCaseToWords(s: string) {
+  const result = s.replace(/([A-Z])/g, ' $1');
+  return result.charAt(0).toUpperCase() + result.slice(1);
+}

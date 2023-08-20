@@ -7,6 +7,7 @@ import CarModelEntry from './CarModelEntry';
 import { isObjectIncluded } from '~/utils/misc';
 
 export interface selectedModel {
+  id: string;
   name: string;
   tuningSheetId?: string;
   tuningSheetTitle?: string;
@@ -77,12 +78,13 @@ const MultipleModelSelect = ({ selectedModels, setSelectedModels }: Props) => {
                     // remove and add model in selectedModels
                     if (isSelected(selectedModels, model.name)) {
                       setSelectedModels((prevState) =>
-                        prevState.filter((item) => item.name !== model.name),
+                        prevState.filter((item) => item.id !== model.id),
                       );
                     } else {
                       setSelectedModels((prevState) => [
                         ...prevState,
                         {
+                          id: model.id,
                           name: model.name,
                           tuningSheetId: undefined,
                           tuningSheetTitle: undefined,
