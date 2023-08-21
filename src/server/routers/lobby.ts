@@ -12,6 +12,28 @@ export const lobbyRouter = router({
     .input(lobbySettingsSchema)
     .mutation(async ({ input, ctx }) => {
       console.log(input);
+      const LobbySettings = await ctx.prisma.lobbySettings.create({
+        data: {
+          ...input,
+          creator: { connect: { id: ctx.session.user.userId } },
+          tracks: {
+            connect: input.tracks,
+          },
+          allowedCars: {
+            create: input.allowedCars.map(({ tuningSheetId, carModelId }) => {
+              return {
+                carModelId: carModelId,
+                tuningSheetId: tuningSheetId,
+              };
+            }),
+          },
+        },
+      });
+      return {
+        status: 201,
+        message: 'Lobby Settings created successfully',
+        result: LobbySettings.id,
+      };
     }),
   tracks: publicProcedure.query(async () => {
     const tracks = await prisma.track.findMany({

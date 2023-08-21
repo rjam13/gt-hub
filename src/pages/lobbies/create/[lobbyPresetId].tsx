@@ -24,7 +24,6 @@ const CreateLobbySettings = () => {
   if (slug !== undefined) lobbySetting = slug;
 
   const { register, setValue, handleSubmit } = useForm<ILobbySettings>({
-    defaultValues: { userId: session?.user?.userId },
     resolver: zodResolver(lobbySettingsSchema),
   });
   const submitSettings = trpc.lobby.createSettings.useMutation();
@@ -65,7 +64,8 @@ const CreateLobbySettings = () => {
   // -1 == not open,
   // any other number == index of selectedModels
   const [currentModelIndex, setCurrentModelIndex] = useState(-1);
-  const currentModelName = selectedModels[currentModelIndex]?.name ?? '';
+  const currentModelName =
+    selectedModels[currentModelIndex]?.carModelName ?? '';
   const { data: tuningSheets, refetch } = trpc.tuningSheet.byCarModel.useQuery(
     {
       name: currentModelName,
@@ -122,7 +122,7 @@ const CreateLobbySettings = () => {
           setCurrentModelIndex(-1);
         }}
       >
-        {`${selectedModels[currentModelIndex]?.name} Tuning Sheets`}
+        {`${selectedModels[currentModelIndex]?.carModelName} Tuning Sheets`}
         {tuningSheets?.map((sheet, index) => {
           return (
             <div key={index}>
@@ -182,7 +182,7 @@ const CreateLobbySettings = () => {
                     onClick={() => {
                       setCurrentModelIndex(index);
                     }}
-                    text={model.name}
+                    text={model.carModelName}
                   />
                   {model.tuningSheetId !== undefined && (
                     <div>

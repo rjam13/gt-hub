@@ -7,8 +7,8 @@ import CarModelEntry from './CarModelEntry';
 import { isObjectIncluded } from '~/utils/misc';
 
 export interface selectedModel {
-  id: string;
-  name: string;
+  carModelId: string;
+  carModelName: string;
   tuningSheetId?: string;
   tuningSheetTitle?: string;
 }
@@ -25,7 +25,7 @@ const MultipleModelSelect = ({ selectedModels, setSelectedModels }: Props) => {
 
   // Checks if an object with certain name is inside selectedModel[]
   const isSelected = (list: selectedModel[], name: string) =>
-    isObjectIncluded<selectedModel>(list, name, 'name');
+    isObjectIncluded<selectedModel>(list, name, 'carModelName');
 
   const manufacturerQuery = trpc.manufacturer.getAll.useQuery(undefined);
   if (manufacturerQuery.status !== 'success') {
@@ -78,14 +78,16 @@ const MultipleModelSelect = ({ selectedModels, setSelectedModels }: Props) => {
                     // remove and add model in selectedModels
                     if (isSelected(selectedModels, model.name)) {
                       setSelectedModels((prevState) =>
-                        prevState.filter((item) => item.id !== model.id),
+                        prevState.filter(
+                          (item) => item.carModelId !== model.id,
+                        ),
                       );
                     } else {
                       setSelectedModels((prevState) => [
                         ...prevState,
                         {
-                          id: model.id,
-                          name: model.name,
+                          carModelId: model.id,
+                          carModelName: model.name,
                           tuningSheetId: undefined,
                           tuningSheetTitle: undefined,
                         },

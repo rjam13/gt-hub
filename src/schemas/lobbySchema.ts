@@ -5,7 +5,6 @@ export const lobbySettingsSchema = z.object({
   title: z.string(),
   description: z.string(),
   tags: z.nativeEnum(lobbyTags).array(),
-  userId: z.string(),
   ppRating: z.number().optional(),
   grRating: z.nativeEnum(carCategory).array(),
   tracks: z
@@ -18,8 +17,8 @@ export const lobbySettingsSchema = z.object({
     .array(),
   allowedCars: z
     .object({
-      id: z.string(),
-      name: z.string(),
+      carModelId: z.string(),
+      carModelName: z.string(),
       tuningSheetId: z.string().optional(),
       tuningSheetName: z.string().optional(),
     })
