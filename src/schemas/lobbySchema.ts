@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { carCategory, lobbyTags } from '@prisma/client';
 
-export const lobbySettingsSchema = z.object({
+export const createLobbySettingsSchema = z.object({
   title: z.string(),
   description: z.string(),
   tags: z.nativeEnum(lobbyTags).array(),
@@ -27,4 +27,10 @@ export const lobbySettingsSchema = z.object({
   minimumWeight: z.number().optional(),
 });
 
-export type ILobbySettings = z.infer<typeof lobbySettingsSchema>;
+export type ICreateLobbySettings = z.infer<typeof createLobbySettingsSchema>;
+
+export const getLobbySettingsInputSchema = z.object({
+  id: z.string(),
+});
+
+export type IGetLobbySettings = z.infer<typeof getLobbySettingsInputSchema>;

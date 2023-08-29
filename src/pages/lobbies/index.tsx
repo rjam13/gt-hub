@@ -8,9 +8,9 @@ const Lobbies = () => {
     <div className="flex flex-col items-center">
       <Widget header="Lobbies" className="w-full">
         <Button text="Create" href="lobbies/create" />
+        {/* <LobbyCard />
         <LobbyCard />
-        <LobbyCard />
-        <LobbyCard />
+        <LobbyCard /> */}
       </Widget>
     </div>
   );

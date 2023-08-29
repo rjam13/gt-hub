@@ -50,9 +50,9 @@ const IndexPage: NextPageWithLayout = () => {
           href="lobbies"
           className="w-full"
         >
+          {/* <LobbyCard />
           <LobbyCard />
-          <LobbyCard />
-          <LobbyCard />
+          <LobbyCard /> */}
         </Widget>
 
         {session ? (

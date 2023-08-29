@@ -8,19 +8,6 @@ import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 async function main() {
-  // const firstPostId = '5c03994c-fc16-47e0-bd02-d218a370a078';
-  // await prisma.post.upsert({
-  //   where: {
-  //     id: firstPostId,
-  //   },
-  //   create: {
-  //     id: firstPostId,
-  //     title: 'First Post',
-  //     text: 'This is an example post generated from `prisma/seed.ts`',
-  //   },
-  //   update: {},
-  // });
-
   // ==================== CARS ====================
   await prisma.manufacturer.upsert({
     where: { name: 'Porsche' },
@@ -230,6 +217,23 @@ async function main() {
       },
     },
   });
+
+  // ==================== LOBBY SETTINGS ====================
+  // *****IMPORTANT*****
+  // Make sure to make a user through the website and
+  // replace the userId below with the new user's userId.
+  // for (let i = 0; i < 100; i++) {
+  //   await prisma.lobbySettings.upsert({
+  //     where: {
+  //       id: String(i),
+  //     },
+  //     create: {
+  //       title: `${i} Lobby Settings filler`,
+  //       userId: 'cllb7sjb50000m0a4oy4axdb5',
+  //     },
+  //     update: {},
+  //   });
+  // }
 }
 
 main()

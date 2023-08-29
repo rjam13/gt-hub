@@ -6,20 +6,21 @@ import Image from 'next/image';
 interface Props {
   text: string;
   href?: string;
-  onClick?: MouseEventHandler<HTMLDivElement>;
+  onClick?: MouseEventHandler<HTMLButtonElement>;
+  disabled?: boolean;
 }
 
-const Button = ({ text, href = '', onClick }: Props) => {
+const Button = ({ text, href = '', onClick, disabled }: Props) => {
   return href != '' ? (
     <Link href={href} className="btn">
       {text}
       <Image src={ArrowIcon} alt="arrow icon" className="ml-[41px] h-full" />
     </Link>
   ) : (
-    <div className="btn" onClick={onClick}>
+    <button className="btn" onClick={onClick} disabled={disabled}>
       {text}
       <Image src={ArrowIcon} alt="arrow icon" className="ml-[41px] h-full" />
-    </div>
+    </button>
   );
 };
 

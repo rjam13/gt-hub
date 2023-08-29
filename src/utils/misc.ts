@@ -22,3 +22,8 @@ export function camelCaseToWords(s: string) {
   const result = s.replace(/([A-Z])/g, ' $1');
   return result.charAt(0).toUpperCase() + result.slice(1);
 }
+
+// https://stackoverflow.com/questions/59774572/how-to-get-the-return-type-of-async-function-in-typescript
+// ReturnType but for async functions
+export type AsyncReturnType<T extends (...args: any) => Promise<any>> =
+  T extends (...args: any) => Promise<infer R> ? R : any;

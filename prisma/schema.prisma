@@ -150,6 +150,7 @@ model Lobby {
 model LobbySettings {
   lobbies       Lobby[]
   id            String          @id @default(cuid())
+  createdAt     DateTime        @default(now())
   title         String
   description   String?
   tags          lobbyTags[]     @default([])

@@ -7,27 +7,58 @@ import MultipleModelSelect, {
   selectedModel,
 } from '~/frontend/components/MultipleModelSelect';
 import Modal from '~/frontend/components/Modal';
-import { lobbyTags, carCategory, TrackLayout } from '@prisma/client';
-import { camelCaseToWords, isObjectIncluded } from '~/utils/misc';
-import { useSession } from 'next-auth/react';
+import {
+  lobbyTags,
+  carCategory,
+  TrackLayout,
+  LobbySettings,
+} from '@prisma/client';
+import {
+  AsyncReturnType,
+  camelCaseToWords,
+  isObjectIncluded,
+} from '~/utils/misc';
 import { SubmitHandler, useForm } from 'react-hook-form';
-import { ILobbySettings, lobbySettingsSchema } from '~/schemas/lobbySchema';
+import {
+  ICreateLobbySettings,
+  createLobbySettingsSchema,
+} from '~/schemas/lobbySchema';
+import { getLobbySettings } from '~/server/routers/lobby';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { GetServerSideProps, InferGetServerSidePropsType } from 'next/types';
+import { prisma } from '~/server/prisma';
 
-const CreateLobbySettings = () => {
-  const { data: session } = useSession();
+export const getServerSideProps: GetServerSideProps<{
+  defaultSettings?: AsyncReturnType<typeof getLobbySettings>;
+}> = async (ctx) => {
+  const lobbySettingId = ctx.params?.lobbySettingId as string;
+  if (lobbySettingId !== 'new') {
+    const defaultSettings = await getLobbySettings({
+      prisma,
+      id: lobbySettingId,
+    });
+    return defaultSettings ? { props: { defaultSettings } } : { props: {} };
+  }
+  return { props: {} };
+};
 
-  // For prefilling data using url slug
-  const router = useRouter();
-  const slug = router.query.manufacturer?.[0];
-  let lobbySetting = '';
-  if (slug !== undefined) lobbySetting = slug;
+const CreateLobbySettings = ({
+  defaultSettings,
+}: InferGetServerSidePropsType<typeof getServerSideProps>) => {
+  console.log(defaultSettings);
 
-  const { register, setValue, handleSubmit } = useForm<ILobbySettings>({
-    resolver: zodResolver(lobbySettingsSchema),
+  const { register, setValue, handleSubmit } = useForm<ICreateLobbySettings>({
+    defaultValues: {
+      title: defaultSettings?.title ?? undefined,
+      description: defaultSettings?.description ?? undefined,
+      ppRating: defaultSettings?.ppRating ?? undefined,
+      maxPower: defaultSettings?.maxPower ?? undefined,
+      minimumWeight: defaultSettings?.minimumWeight ?? undefined,
+    },
+    resolver: zodResolver(createLobbySettingsSchema),
   });
   const submitSettings = trpc.lobby.createSettings.useMutation();
-  const onSubmit: SubmitHandler<ILobbySettings> = async (values) => {
+  const onSubmit: SubmitHandler<ICreateLobbySettings> = async (values) => {
     console.log(values);
     try {
       await submitSettings.mutateAsync(values);
@@ -37,8 +68,18 @@ const CreateLobbySettings = () => {
   };
 
   // ========== CAR MODELS ==========
+  const defaultModels: selectedModel[] =
+    defaultSettings?.allowedCars?.map((car) => {
+      return {
+        carModelId: car.carModelId,
+        carModelName: car.carModel.name,
+        tuningSheetId: car.tuningSheetId ?? undefined,
+        tuningSheetTitle: car.tuningSheet?.title,
+      };
+    }) ?? [];
   // tracks which cars are allowed
-  const [selectedModels, setSelectedModels] = useState<selectedModel[]>([]);
+  const [selectedModels, setSelectedModels] =
+    useState<selectedModel[]>(defaultModels);
   // updates a specific selected model with a tuning sheet
   const updateSelectedModel = (
     index: number,
@@ -66,22 +107,23 @@ const CreateLobbySettings = () => {
   const [currentModelIndex, setCurrentModelIndex] = useState(-1);
   const currentModelName =
     selectedModels[currentModelIndex]?.carModelName ?? '';
-  const { data: tuningSheets, refetch } = trpc.tuningSheet.byCarModel.useQuery(
-    {
-      name: currentModelName,
-    },
-    { enabled: false },
-  );
+  const { data: tuningSheets, refetch: refetchTuningSheets } =
+    trpc.tuningSheet.byCarModel.useQuery(
+      {
+        name: currentModelName,
+      },
+      { enabled: false },
+    );
   // whenever currentModelIndex is changed, refetch data (tuning sheets).
   useEffect(() => {
-    if (currentModelIndex !== -1) refetch();
-  }, [currentModelIndex, refetch]);
+    if (currentModelIndex !== -1) refetchTuningSheets();
+  }, [currentModelIndex, refetchTuningSheets]);
 
   // ========== TRACKS ==========
   const { data: tracks } = trpc.lobby.tracks.useQuery();
   const [selectedTrackLayouts, setSelectedTrackLayouts] = useState<
     TrackLayout[]
-  >([]);
+  >(defaultSettings?.tracks ?? []);
   // Checks if track of name is inside selectedTrackLayouts
   const isTrackLayoutSelected = (list: TrackLayout[], name: string) =>
     isObjectIncluded<TrackLayout>(list, name, 'name');
@@ -90,12 +132,14 @@ const CreateLobbySettings = () => {
   }, [selectedTrackLayouts, setValue]);
 
   // ========== TAGS ==========
-  const [tags, setTags] = useState<lobbyTags[]>([]);
+  const [tags, setTags] = useState<lobbyTags[]>(defaultSettings?.tags ?? []);
   useEffect(() => {
     setValue('tags', tags);
   }, [tags, setValue]);
   // ========== GR RATING ==========
-  const [grRating, setGRRating] = useState<carCategory[]>([]);
+  const [grRating, setGRRating] = useState<carCategory[]>(
+    defaultSettings?.grRating ?? [],
+  );
   useEffect(() => {
     setValue('grRating', grRating);
   }, [grRating, setValue]);
