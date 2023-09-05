@@ -153,17 +153,6 @@ const CreateLobbySettings = ({
     setValue('tracks', selectedTrackLayouts);
   }, [selectedTrackLayouts, setValue]);
 
-  // ========== TAGS ==========
-  const [tags, setTags] = useState<lobbyTags[]>(defaultTags);
-  useEffect(() => {
-    setValue('tags', tags);
-  }, [tags, setValue]);
-  // ========== GR RATING ==========
-  const [grRating, setGRRating] = useState<carCategory[]>(defaultGRRating);
-  useEffect(() => {
-    setValue('grRating', grRating);
-  }, [grRating, setValue]);
-
   return (
     <>
       {/* ===== modelSelectModal ===== */}
@@ -320,29 +309,15 @@ const CreateLobbySettings = ({
               <legend>Choose Tags:</legend>
               <div>
                 {Object.keys(lobbyTags).map((v, index) => {
-                  const value: (typeof tags)[number] =
-                    v as (typeof tags)[number];
                   return (
                     <Fragment key={index}>
                       <input
-                        id={value}
+                        id={v}
                         type="checkbox"
-                        name="tags"
-                        checked={tags.includes(value)}
-                        onChange={() => {
-                          return;
-                        }}
-                        onClick={() => {
-                          if (tags.includes(value)) {
-                            setTags((prevState) =>
-                              prevState.filter((e) => e !== value),
-                            );
-                          } else {
-                            setTags((prevState) => [...prevState, value]);
-                          }
-                        }}
+                        value={v}
+                        {...register('tags')}
                       />
-                      <label htmlFor={value}>{camelCaseToWords(value)}</label>
+                      <label htmlFor={v}>{camelCaseToWords(v)}</label>
                       <br />
                     </Fragment>
                   );
@@ -352,28 +327,14 @@ const CreateLobbySettings = ({
               {/* ===== GR RATING ===== */}
               <legend>GR Rating:</legend>
               <div>
-                {Object.keys(carCategory).map((v, index) => {
-                  const value: (typeof grRating)[number] =
-                    v as (typeof grRating)[number];
+                {Object.keys(carCategory).map((value, index) => {
                   return (
                     <Fragment key={index}>
                       <input
                         id={value}
                         type="checkbox"
-                        name="grRating"
-                        checked={grRating.includes(value)}
-                        onChange={() => {
-                          return;
-                        }}
-                        onClick={() => {
-                          if (grRating.includes(value)) {
-                            setGRRating((prevState) =>
-                              prevState.filter((e) => e !== value),
-                            );
-                          } else {
-                            setGRRating((prevState) => [...prevState, value]);
-                          }
-                        }}
+                        value={value}
+                        {...register('grRating')}
                       />
                       <label htmlFor={value}>{camelCaseToWords(value)}</label>
                       <br />
