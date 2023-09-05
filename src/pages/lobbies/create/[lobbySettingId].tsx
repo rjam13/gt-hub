@@ -7,16 +7,12 @@ import MultipleModelSelect, {
   selectedModel,
 } from '~/frontend/components/MultipleModelSelect';
 import Modal from '~/frontend/components/Modal';
-import {
-  lobbyTags,
-  carCategory,
-  TrackLayout,
-  LobbySettings,
-} from '@prisma/client';
+import { lobbyTags, carCategory, TrackLayout } from '@prisma/client';
 import {
   AsyncReturnType,
   camelCaseToWords,
   isObjectIncluded,
+  getDirtyValues,
 } from '~/utils/misc';
 import { SubmitHandler, useForm } from 'react-hook-form';
 import {
@@ -27,6 +23,7 @@ import { getLobbySettings } from '~/server/routers/lobby';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { GetServerSideProps, InferGetServerSidePropsType } from 'next/types';
 import { prisma } from '~/server/prisma';
+import { useSession } from 'next-auth/react';
 
 export const getServerSideProps: GetServerSideProps<{
   defaultSettings?: AsyncReturnType<typeof getLobbySettings>;
@@ -45,29 +42,8 @@ export const getServerSideProps: GetServerSideProps<{
 const CreateLobbySettings = ({
   defaultSettings,
 }: InferGetServerSidePropsType<typeof getServerSideProps>) => {
-  console.log(defaultSettings);
+  const { data: session } = useSession();
 
-  const { register, setValue, handleSubmit } = useForm<ICreateLobbySettings>({
-    defaultValues: {
-      title: defaultSettings?.title ?? undefined,
-      description: defaultSettings?.description ?? undefined,
-      ppRating: defaultSettings?.ppRating ?? undefined,
-      maxPower: defaultSettings?.maxPower ?? undefined,
-      minimumWeight: defaultSettings?.minimumWeight ?? undefined,
-    },
-    resolver: zodResolver(createLobbySettingsSchema),
-  });
-  const submitSettings = trpc.lobby.createSettings.useMutation();
-  const onSubmit: SubmitHandler<ICreateLobbySettings> = async (values) => {
-    console.log(values);
-    try {
-      await submitSettings.mutateAsync(values);
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
-  // ========== CAR MODELS ==========
   const defaultModels: selectedModel[] =
     defaultSettings?.allowedCars?.map((car) => {
       return {
@@ -77,6 +53,53 @@ const CreateLobbySettings = ({
         tuningSheetTitle: car.tuningSheet?.title,
       };
     }) ?? [];
+  const defaultTracks = defaultSettings?.tracks ?? [];
+  const defaultTags = defaultSettings?.tags ?? [];
+  const defaultGRRating = defaultSettings?.grRating ?? [];
+  const { register, setValue, handleSubmit, formState } =
+    useForm<ICreateLobbySettings>({
+      defaultValues: {
+        title: defaultSettings?.title ?? undefined,
+        description: defaultSettings?.description ?? undefined,
+        ppRating: defaultSettings?.ppRating ?? undefined,
+        maxPower: defaultSettings?.maxPower ?? undefined,
+        minimumWeight: defaultSettings?.minimumWeight ?? undefined,
+        allowedCars: defaultModels,
+        tracks: defaultTracks,
+        tags: defaultTags,
+        grRating: defaultGRRating,
+      },
+      resolver: zodResolver(createLobbySettingsSchema),
+    });
+  // For pressing the "New" button. This action creates a new entry in the database
+  const createSettings = trpc.lobby.createSettings.useMutation();
+  const newSettings: SubmitHandler<ICreateLobbySettings> = async (values) => {
+    console.log(values);
+    try {
+      await createSettings.mutateAsync(values);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+  // For pressing the "Save" button. This action updates the entry that corresponds to the id in defaultSettings.
+  // Can be executed if defaultSettings exists (i.e. the id of the settings is in the url)
+  // and that the name in creator in defaultSettings is equal to the current user's name
+  const updateSettings = trpc.lobby.updateSettings.useMutation();
+  const saveSettings: SubmitHandler<ICreateLobbySettings> = async (values) => {
+    // ***** TODO *****
+    // THIS SHOULD ONLY PASS TO CHANGED VALUES TO updateSettings.mutateAsync
+    try {
+      if (typeof defaultSettings?.id != 'undefined')
+        await updateSettings.mutateAsync({
+          ...values,
+          id: defaultSettings?.id,
+        });
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  // ========== CAR MODELS ==========
   // tracks which cars are allowed
   const [selectedModels, setSelectedModels] =
     useState<selectedModel[]>(defaultModels);
@@ -121,9 +144,8 @@ const CreateLobbySettings = ({
 
   // ========== TRACKS ==========
   const { data: tracks } = trpc.lobby.tracks.useQuery();
-  const [selectedTrackLayouts, setSelectedTrackLayouts] = useState<
-    TrackLayout[]
-  >(defaultSettings?.tracks ?? []);
+  const [selectedTrackLayouts, setSelectedTrackLayouts] =
+    useState<TrackLayout[]>(defaultTracks);
   // Checks if track of name is inside selectedTrackLayouts
   const isTrackLayoutSelected = (list: TrackLayout[], name: string) =>
     isObjectIncluded<TrackLayout>(list, name, 'name');
@@ -132,14 +154,12 @@ const CreateLobbySettings = ({
   }, [selectedTrackLayouts, setValue]);
 
   // ========== TAGS ==========
-  const [tags, setTags] = useState<lobbyTags[]>(defaultSettings?.tags ?? []);
+  const [tags, setTags] = useState<lobbyTags[]>(defaultTags);
   useEffect(() => {
     setValue('tags', tags);
   }, [tags, setValue]);
   // ========== GR RATING ==========
-  const [grRating, setGRRating] = useState<carCategory[]>(
-    defaultSettings?.grRating ?? [],
-  );
+  const [grRating, setGRRating] = useState<carCategory[]>(defaultGRRating);
   useEffect(() => {
     setValue('grRating', grRating);
   }, [grRating, setValue]);
@@ -193,9 +213,10 @@ const CreateLobbySettings = ({
       </Modal>
 
       <div className="flex flex-col items-center">
+        {/* <pre>{JSON.stringify(formState, null, 2)}</pre> */}
         <Widget header="Create Lobby Settings" className="w-full">
           <div className="flex flex-col">
-            <form onSubmit={handleSubmit(onSubmit)}>
+            <form>
               {/* ===== TITLE ===== */}
               <label htmlFor="title">title:</label>
               <input id="title" type="text" {...register('title')} />
@@ -398,7 +419,11 @@ const CreateLobbySettings = ({
               <input id="startTime" name="startTime" type="datetime-local" />
 
               <br />
-              <input type="submit" />
+              <Button text="New" onClick={handleSubmit(newSettings)} />
+
+              {defaultSettings?.creator.name === session?.user?.name && (
+                <Button text="Save" onClick={handleSubmit(saveSettings)} />
+              )}
             </form>
           </div>
         </Widget>

@@ -3,6 +3,7 @@ import Widget from '~/frontend/components/Widget';
 import Button from '~/frontend/components/Button';
 import LobbyCard from '~/frontend/components/LobbyCard';
 import { trpc } from '~/utils/trpc';
+import ButtonLink from '~/frontend/components/ButtonLink';
 
 const CreateLobby = () => {
   const lobbySettingsQuery = trpc.lobby.listLobbySettings.useInfiniteQuery(
@@ -21,7 +22,7 @@ const CreateLobby = () => {
     <div className="flex flex-col items-center">
       <Widget header="Create A Lobby" className="w-full">
         <div className="flex flex-col items-center">
-          <Button text="Create New" href="create/new" />
+          <ButtonLink text="Create New" href="create/new" />
           <p>Or</p>
 
           <p>Choose An Existing Preset</p>

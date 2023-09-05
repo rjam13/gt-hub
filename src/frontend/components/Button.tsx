@@ -1,23 +1,28 @@
-import React, { MouseEventHandler } from 'react';
+import React, { ButtonHTMLAttributes, MouseEventHandler } from 'react';
 import ArrowIcon from '~/frontend/assets/arrow.svg';
 import Link from 'next/link';
 import Image from 'next/image';
 
-interface Props {
+interface Props extends React.HTMLProps<HTMLButtonElement> {
+  type?: 'button' | 'submit' | 'reset';
   text: string;
-  href?: string;
-  onClick?: MouseEventHandler<HTMLButtonElement>;
-  disabled?: boolean;
 }
 
-const Button = ({ text, href = '', onClick, disabled }: Props) => {
-  return href != '' ? (
-    <Link href={href} className="btn">
-      {text}
-      <Image src={ArrowIcon} alt="arrow icon" className="ml-[41px] h-full" />
-    </Link>
-  ) : (
-    <button className="btn" onClick={onClick} disabled={disabled}>
+const Button = ({
+  type = 'button',
+  text,
+  onClick,
+  disabled,
+  ...rest
+}: Props) => {
+  return (
+    <button
+      type={type}
+      className="btn"
+      onClick={onClick}
+      disabled={disabled}
+      {...rest}
+    >
       {text}
       <Image src={ArrowIcon} alt="arrow icon" className="ml-[41px] h-full" />
     </button>

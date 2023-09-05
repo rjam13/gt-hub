@@ -29,8 +29,12 @@ export const createLobbySettingsSchema = z.object({
 
 export type ICreateLobbySettings = z.infer<typeof createLobbySettingsSchema>;
 
-export const getLobbySettingsInputSchema = z.object({
+export const updateLobbySettingsSchema = createLobbySettingsSchema.extend({
   id: z.string(),
 });
 
-export type IGetLobbySettings = z.infer<typeof getLobbySettingsInputSchema>;
+// export const getLobbySettingsInputSchema = z.object({
+//   id: z.string(),
+// });
+
+// export type IGetLobbySettings = z.infer<typeof getLobbySettingsInputSchema>;

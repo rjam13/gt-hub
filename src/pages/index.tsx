@@ -1,8 +1,6 @@
 import { NextPageWithLayout } from './_app';
 import Image from 'next/image';
 import hero from '~/frontend/assets/hero.jpg';
-import Button from '~/frontend/components/Button';
-
 import { useSession, signIn, signOut } from 'next-auth/react';
 import { signUp } from '~/utils/user';
 import Widget from '~/frontend/components/Widget';
@@ -10,6 +8,7 @@ import Navbar from '~/frontend/components/Navbar';
 import Footer from '~/frontend/components/Footer';
 import { ReactElement } from 'react';
 import LobbyCard from '~/frontend/components/LobbyCard';
+import ButtonLink from '~/frontend/components/ButtonLink';
 
 const IndexPage: NextPageWithLayout = () => {
   const { data: session } = useSession();
@@ -30,8 +29,8 @@ const IndexPage: NextPageWithLayout = () => {
             </p>
           </div>
           <div className="mt-[15px] flex justify-center">
-            <Button text="Lobbies" href="lobbies" />
-            <Button text="Tuning Sheets" href="cars" />
+            <ButtonLink text="Lobbies" href="lobbies" />
+            <ButtonLink text="Tuning Sheets" href="cars" />
           </div>
         </div>
       </div>

@@ -1,6 +1,9 @@
 import { router, publicProcedure, protectedProcedure } from '../trpc';
 import { Prisma, PrismaClient } from '@prisma/client';
-import { createLobbySettingsSchema } from '~/schemas/lobbySchema';
+import {
+  createLobbySettingsSchema,
+  updateLobbySettingsSchema,
+} from '~/schemas/lobbySchema';
 import { prisma } from '~/server/prisma';
 import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
@@ -122,6 +125,47 @@ export const lobbyRouter = router({
       return {
         status: 201,
         message: 'Lobby Settings created successfully',
+        result: LobbySettings.id,
+      };
+    }),
+  updateSettings: protectedProcedure
+    .input(updateLobbySettingsSchema)
+    .mutation(async ({ input, ctx }) => {
+      console.log(input);
+      // ***** TODO *****
+      // THE LOBBY SETTINGS SHOULD ONLY UPDATE THE VALUES THAT HAVE CHANGED
+      // This should help: https://stackoverflow.com/a/69529379
+      const LobbySettings = await ctx.prisma.lobbySettings.update({
+        where: { id: input.id },
+        data: {
+          title: input.title,
+          description: input.description,
+          tags: input.tags,
+          ppRating: input.ppRating,
+          grRating: input.grRating,
+          maxPower: input.maxPower,
+          minimumWeight: input.minimumWeight,
+          tracks: {
+            set: [],
+            connect: input.tracks,
+          },
+          allowedCars: {
+            deleteMany: {},
+            createMany: {
+              data:
+                input.allowedCars?.map(({ tuningSheetId, carModelId }) => {
+                  return {
+                    carModelId: carModelId,
+                    tuningSheetId: tuningSheetId,
+                  };
+                }) ?? [],
+            },
+          },
+        },
+      });
+      return {
+        status: 204,
+        message: `Lobby Setting ${LobbySettings.id} updated successfully`,
         result: LobbySettings.id,
       };
     }),
