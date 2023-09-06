@@ -138,29 +138,33 @@ export const lobbyRouter = router({
       const LobbySettings = await ctx.prisma.lobbySettings.update({
         where: { id: input.id },
         data: {
-          title: input.title,
-          description: input.description,
-          tags: input.tags,
-          ppRating: input.ppRating,
-          grRating: input.grRating,
-          maxPower: input.maxPower,
-          minimumWeight: input.minimumWeight,
-          tracks: {
-            set: [],
-            connect: input.tracks,
-          },
-          allowedCars: {
-            deleteMany: {},
-            createMany: {
-              data:
-                input.allowedCars?.map(({ tuningSheetId, carModelId }) => {
-                  return {
-                    carModelId: carModelId,
-                    tuningSheetId: tuningSheetId,
-                  };
-                }) ?? [],
-            },
-          },
+          title: input.title || undefined,
+          description: input.description || undefined,
+          tags: input.tags || undefined,
+          ppRating: input.ppRating || undefined,
+          grRating: input.grRating || undefined,
+          maxPower: input.maxPower || undefined,
+          minimumWeight: input.minimumWeight || undefined,
+          tracks: input.tracks
+            ? {
+                set: [],
+                connect: input.tracks,
+              }
+            : undefined,
+          allowedCars: input.allowedCars
+            ? {
+                deleteMany: {},
+                createMany: {
+                  data:
+                    input.allowedCars?.map(({ tuningSheetId, carModelId }) => {
+                      return {
+                        carModelId: carModelId,
+                        tuningSheetId: tuningSheetId,
+                      };
+                    }) ?? [],
+                },
+              }
+            : undefined,
         },
       });
       return {

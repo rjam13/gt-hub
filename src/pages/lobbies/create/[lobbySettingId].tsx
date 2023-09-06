@@ -13,6 +13,7 @@ import {
   camelCaseToWords,
   isObjectIncluded,
   getDirtyValues,
+  isObjectIncludedUsingTwoCriterias,
 } from '~/utils/misc';
 import { SubmitHandler, useForm } from 'react-hook-form';
 import {
@@ -39,9 +40,13 @@ export const getServerSideProps: GetServerSideProps<{
   return { props: {} };
 };
 
+let renderCount = 0;
+
 const CreateLobbySettings = ({
   defaultSettings,
 }: InferGetServerSidePropsType<typeof getServerSideProps>) => {
+  console.log(`render ${++renderCount}`);
+
   const { data: session } = useSession();
 
   const defaultModels: selectedModel[] =
@@ -74,7 +79,6 @@ const CreateLobbySettings = ({
   // For pressing the "New" button. This action creates a new entry in the database
   const createSettings = trpc.lobby.createSettings.useMutation();
   const newSettings: SubmitHandler<ICreateLobbySettings> = async (values) => {
-    console.log(values);
     try {
       await createSettings.mutateAsync(values);
     } catch (error) {
@@ -88,10 +92,12 @@ const CreateLobbySettings = ({
   const saveSettings: SubmitHandler<ICreateLobbySettings> = async (values) => {
     // ***** TODO *****
     // THIS SHOULD ONLY PASS TO CHANGED VALUES TO updateSettings.mutateAsync
+    const dirtyValues = getDirtyValues(formState.dirtyFields, values);
+    console.log(dirtyValues);
     try {
       if (typeof defaultSettings?.id != 'undefined')
         await updateSettings.mutateAsync({
-          ...values,
+          ...dirtyValues,
           id: defaultSettings?.id,
         });
     } catch (error) {
@@ -118,10 +124,28 @@ const CreateLobbySettings = ({
     );
   };
   useEffect(() => {
-    setValue('allowedCars', selectedModels);
+    setValue('allowedCars', selectedModels, { shouldDirty: true });
   }, [selectedModels, setValue]);
   // tracks if the "Choose Cars "modal is open
   const [modelSelectModal, setModelSelectModal] = useState(false);
+  // Checks if the model is new to the exisiting list of cars, defaultModels.
+  // if there is no defaultModels (i.e. an entirely new tuning sheet), this will always return true
+  const isNewlySelectedModel = (carModelId: string) =>
+    !isObjectIncluded<selectedModel>(defaultModels, carModelId, 'carModelId');
+  // Checks if the tuning sheet of model is changed from the default.
+  // e.g. This will return true if the pre-existing (from defaultModels) tuning sheet is removed
+  const isTuningSheetChanged = (
+    carModelId: string,
+    tuningSheetId: string | undefined,
+  ) => {
+    return !isObjectIncludedUsingTwoCriterias<selectedModel>(
+      defaultModels,
+      tuningSheetId,
+      'tuningSheetId',
+      carModelId,
+      'carModelId',
+    );
+  };
 
   // ========== SELECTED CAR MODEL TUNING SHEETS ==========
   // tracks if tuning sheet modal is open of any car,
@@ -147,10 +171,10 @@ const CreateLobbySettings = ({
   const [selectedTrackLayouts, setSelectedTrackLayouts] =
     useState<TrackLayout[]>(defaultTracks);
   // Checks if track of name is inside selectedTrackLayouts
-  const isTrackLayoutSelected = (list: TrackLayout[], name: string) =>
-    isObjectIncluded<TrackLayout>(list, name, 'name');
+  const isTrackLayoutSelected = (name: string) =>
+    isObjectIncluded<TrackLayout>(selectedTrackLayouts, name, 'name');
   useEffect(() => {
-    setValue('tracks', selectedTrackLayouts);
+    setValue('tracks', selectedTrackLayouts, { shouldDirty: true });
   }, [selectedTrackLayouts, setValue]);
 
   return (
@@ -207,12 +231,24 @@ const CreateLobbySettings = ({
           <div className="flex flex-col">
             <form>
               {/* ===== TITLE ===== */}
-              <label htmlFor="title">title:</label>
+              <label
+                className={formState.dirtyFields.title ? 'text-amber-300' : ''}
+                htmlFor="title"
+              >
+                title:
+              </label>
               <input id="title" type="text" {...register('title')} />
               <br />
 
               {/* ===== DESCRIPTION ===== */}
-              <label htmlFor="description">description:</label>
+              <label
+                htmlFor="description"
+                className={
+                  formState.dirtyFields.description ? 'text-amber-300' : ''
+                }
+              >
+                description:
+              </label>
               <input
                 id="description"
                 type="text"
@@ -223,6 +259,9 @@ const CreateLobbySettings = ({
               {/* ===== CHOOSE CAR MODELS ===== */}
               <Button
                 text="Choose Cars"
+                className={
+                  formState.dirtyFields.allowedCars ? 'text-amber-300' : ''
+                }
                 onClick={() => {
                   setModelSelectModal(true);
                 }}
@@ -233,6 +272,16 @@ const CreateLobbySettings = ({
               {selectedModels.map((model, index) => (
                 <Fragment key={index}>
                   <Button
+                    className={
+                      formState.dirtyFields.allowedCars &&
+                      (isNewlySelectedModel(model.carModelId) ||
+                        isTuningSheetChanged(
+                          model.carModelId,
+                          model.tuningSheetId,
+                        ))
+                        ? 'text-amber-300'
+                        : ''
+                    }
                     onClick={() => {
                       setCurrentModelIndex(index);
                     }}
@@ -258,7 +307,11 @@ const CreateLobbySettings = ({
               ))}
 
               {/* ===== TRACK SELECTION ===== */}
-              <legend>Choose Tracks:</legend>
+              <legend
+                className={formState.dirtyFields.tracks ? 'text-amber-300' : ''}
+              >
+                Choose Tracks:
+              </legend>
               <div>
                 {tracks?.map((track, index) => (
                   <Fragment key={index}>
@@ -269,20 +322,12 @@ const CreateLobbySettings = ({
                           id={layout.id}
                           type="checkbox"
                           name="tracks"
-                          checked={isTrackLayoutSelected(
-                            selectedTrackLayouts,
-                            layout.name,
-                          )}
+                          checked={isTrackLayoutSelected(layout.name)}
                           onChange={() => {
                             return;
                           }}
                           onClick={() => {
-                            if (
-                              isTrackLayoutSelected(
-                                selectedTrackLayouts,
-                                layout.name,
-                              )
-                            ) {
+                            if (isTrackLayoutSelected(layout.name)) {
                               setSelectedTrackLayouts((prevState) =>
                                 prevState.filter(
                                   (item) => item.name !== layout.name,
@@ -305,8 +350,13 @@ const CreateLobbySettings = ({
               </div>
 
               <h3>optional:</h3>
+              {/* TO DO: Make these fields actually optional as the form requires them to be filled before submitting */}
               {/* ===== TAGS ===== */}
-              <legend>Choose Tags:</legend>
+              <legend
+                className={formState.dirtyFields.tags ? 'text-amber-300' : ''}
+              >
+                Choose Tags:
+              </legend>
               <div>
                 {Object.keys(lobbyTags).map((v, index) => {
                   return (
@@ -325,7 +375,13 @@ const CreateLobbySettings = ({
               </div>
 
               {/* ===== GR RATING ===== */}
-              <legend>GR Rating:</legend>
+              <legend
+                className={
+                  formState.dirtyFields.grRating ? 'text-amber-300' : ''
+                }
+              >
+                GR Rating:
+              </legend>
               <div>
                 {Object.keys(carCategory).map((value, index) => {
                   return (
@@ -345,7 +401,14 @@ const CreateLobbySettings = ({
               <br />
 
               {/* ===== PP RATING ===== */}
-              <label htmlFor="ppRating">ppRating:</label>
+              <label
+                htmlFor="ppRating"
+                className={
+                  formState.dirtyFields.ppRating ? 'text-amber-300' : ''
+                }
+              >
+                ppRating:
+              </label>
               <input
                 id="ppRating"
                 type="text"
@@ -354,7 +417,14 @@ const CreateLobbySettings = ({
               <br />
 
               {/* ===== MAX POWER ===== */}
-              <label htmlFor="maxPower">maxPower:</label>
+              <label
+                htmlFor="maxPower"
+                className={
+                  formState.dirtyFields.maxPower ? 'text-amber-300' : ''
+                }
+              >
+                maxPower:
+              </label>
               <input
                 id="maxPower"
                 type="text"
@@ -363,7 +433,14 @@ const CreateLobbySettings = ({
               <br />
 
               {/* ===== MINIMUM WEIGHT ===== */}
-              <label htmlFor="minimumWeight">minimumWeight:</label>
+              <label
+                htmlFor="minimumWeight"
+                className={
+                  formState.dirtyFields.minimumWeight ? 'text-amber-300' : ''
+                }
+              >
+                minimumWeight:
+              </label>
               <input
                 id="minimumWeight"
                 type="text"
@@ -373,18 +450,19 @@ const CreateLobbySettings = ({
 
               {/* ===== START TIME ===== */}
               {/* This is not being passed to the backend at the moment */}
-              {/* This page is for now a create lobby settings page rather than lobbies themselves */}
-              <h3>
+              {/* TO DO: Create actual lobbies using this */}
+              {/* <h3>
                 <label htmlFor="startTime">startTime:</label>
               </h3>
-              <input id="startTime" name="startTime" type="datetime-local" />
+              <input id="startTime" name="startTime" type="datetime-local" /> */}
 
               <br />
               <Button text="New" onClick={handleSubmit(newSettings)} />
 
-              {defaultSettings?.creator.name === session?.user?.name && (
-                <Button text="Save" onClick={handleSubmit(saveSettings)} />
-              )}
+              {defaultSettings?.creator.name === session?.user?.name &&
+                formState.isDirty && (
+                  <Button text="Save" onClick={handleSubmit(saveSettings)} />
+                )}
             </form>
           </div>
         </Widget>

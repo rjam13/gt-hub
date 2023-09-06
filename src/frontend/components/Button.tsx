@@ -13,12 +13,13 @@ const Button = ({
   text,
   onClick,
   disabled,
+  className,
   ...rest
 }: Props) => {
   return (
     <button
       type={type}
-      className="btn"
+      className={`btn ${className}`}
       onClick={onClick}
       disabled={disabled}
       {...rest}
