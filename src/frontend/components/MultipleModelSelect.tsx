@@ -4,7 +4,7 @@ import Widget from '~/frontend/components/Widget';
 import exampleModel from '~/frontend/assets/porsche_911_Turbo_(930)_81.png';
 import ManufacturerCard from './ManufacturerCard';
 import CarModelEntry from './CarModelEntry';
-import { isObjectIncluded } from '~/utils/misc';
+import { isObjectIncluded, sortObjectByStringCallback } from '~/utils/misc';
 
 export interface selectedModel {
   carModelId: string;
@@ -83,15 +83,20 @@ const MultipleModelSelect = ({ selectedModels, setSelectedModels }: Props) => {
                         ),
                       );
                     } else {
-                      setSelectedModels((prevState) => [
-                        ...prevState,
-                        {
-                          carModelId: model.id,
-                          carModelName: model.name,
-                          tuningSheetId: undefined,
-                          tuningSheetTitle: undefined,
-                        },
-                      ]);
+                      setSelectedModels((prevState) => {
+                        // this needs to be sort because array dirtyFields differentiates ["supra", "r34"] from ["r34", "supra"]
+                        return [
+                          ...prevState,
+                          {
+                            carModelId: model.id,
+                            carModelName: model.name,
+                            tuningSheetId: undefined,
+                            tuningSheetTitle: undefined,
+                          },
+                        ].sort((a, b) =>
+                          sortObjectByStringCallback(a, b, 'carModelName'),
+                        );
+                      });
                     }
                   }}
                 />

@@ -66,3 +66,23 @@ export function getDirtyValues<
 
   return dirtyValues;
 }
+
+// This function is passed into the sort function as a callback function
+// Optional TODO: make sure the value of the criteria is a string
+/**
+ * @param {string} a - parameter provided from .sort function
+ * @param {string} b - parameter provided from .sort function
+ * @param {string} criteria - Criteria is the property you would want to sort objects. Obviously, the type of criteria should be string.
+ */
+// example: [{name: "john"}, {name: "rey"}, {name: "mary"}].sort((a, b) => sortObjectByStringCallback(a, b, 'name'));
+export function sortObjectByStringCallback<T>(a: T, b: T, criteria: keyof T) {
+  const fa = String(a[criteria]).toLowerCase(),
+    fb = String(b[criteria]).toLowerCase();
+  if (fa < fb) {
+    return -1;
+  }
+  if (fa > fb) {
+    return 1;
+  }
+  return 0;
+}

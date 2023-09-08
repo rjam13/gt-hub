@@ -11,6 +11,9 @@ import { TRPCError } from '@trpc/server';
 // This file is for providing all the data/options in the "Create Lobby Settings" page.
 // e.g. Tracks, tags, gr rating, etc..
 // Cars and tuning sheets are in their own routers.
+
+// tracks and allowedCars are sorted for React Hook Form.
+// ["supra", "r34"] is different from ["r34", "supra"]
 const defaultLobbySettingsSelect =
   Prisma.validator<Prisma.LobbySettingsSelect>()({
     id: true,
@@ -18,9 +21,12 @@ const defaultLobbySettingsSelect =
     title: true,
     description: true,
     tags: true,
-    creator: { select: { name: true } },
-    tracks: true,
+    creator: { select: { name: true, id: true } },
+    tracks: { orderBy: { name: 'asc' } },
     allowedCars: {
+      orderBy: {
+        carModel: { name: 'asc' },
+      },
       include: {
         carModel: { select: { id: true, name: true } },
         tuningSheet: { select: { id: true, title: true } },
@@ -132,11 +138,8 @@ export const lobbyRouter = router({
     .input(updateLobbySettingsSchema)
     .mutation(async ({ input, ctx }) => {
       console.log(input);
-      // ***** TODO *****
-      // THE LOBBY SETTINGS SHOULD ONLY UPDATE THE VALUES THAT HAVE CHANGED
-      // This should help: https://stackoverflow.com/a/69529379
       const LobbySettings = await ctx.prisma.lobbySettings.update({
-        where: { id: input.id },
+        where: { id: input.id, creator: { id: input.creatorId } },
         data: {
           title: input.title || undefined,
           description: input.description || undefined,

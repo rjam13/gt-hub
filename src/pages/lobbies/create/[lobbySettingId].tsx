@@ -14,6 +14,7 @@ import {
   isObjectIncluded,
   getDirtyValues,
   isObjectIncludedUsingTwoCriterias,
+  sortObjectByStringCallback,
 } from '~/utils/misc';
 import { SubmitHandler, useForm } from 'react-hook-form';
 import {
@@ -48,6 +49,7 @@ const CreateLobbySettings = ({
   console.log(`render ${++renderCount}`);
 
   const { data: session } = useSession();
+  const router = useRouter();
 
   const defaultModels: selectedModel[] =
     defaultSettings?.allowedCars?.map((car) => {
@@ -59,23 +61,25 @@ const CreateLobbySettings = ({
       };
     }) ?? [];
   const defaultTracks = defaultSettings?.tracks ?? [];
-  const defaultTags = defaultSettings?.tags ?? [];
-  const defaultGRRating = defaultSettings?.grRating ?? [];
-  const { register, setValue, handleSubmit, formState } =
-    useForm<ICreateLobbySettings>({
-      defaultValues: {
-        title: defaultSettings?.title ?? undefined,
-        description: defaultSettings?.description ?? undefined,
-        ppRating: defaultSettings?.ppRating ?? undefined,
-        maxPower: defaultSettings?.maxPower ?? undefined,
-        minimumWeight: defaultSettings?.minimumWeight ?? undefined,
-        allowedCars: defaultModels,
-        tracks: defaultTracks,
-        tags: defaultTags,
-        grRating: defaultGRRating,
-      },
-      resolver: zodResolver(createLobbySettingsSchema),
-    });
+  const {
+    register,
+    setValue,
+    handleSubmit,
+    formState: { dirtyFields, isDirty },
+  } = useForm<ICreateLobbySettings>({
+    defaultValues: {
+      title: defaultSettings?.title ?? undefined,
+      description: defaultSettings?.description ?? undefined,
+      ppRating: defaultSettings?.ppRating ?? undefined,
+      maxPower: defaultSettings?.maxPower ?? undefined,
+      minimumWeight: defaultSettings?.minimumWeight ?? undefined,
+      allowedCars: defaultModels,
+      tracks: defaultTracks,
+      tags: defaultSettings?.tags ?? [],
+      grRating: defaultSettings?.grRating ?? [],
+    },
+    resolver: zodResolver(createLobbySettingsSchema),
+  });
   // For pressing the "New" button. This action creates a new entry in the database
   const createSettings = trpc.lobby.createSettings.useMutation();
   const newSettings: SubmitHandler<ICreateLobbySettings> = async (values) => {
@@ -84,25 +88,25 @@ const CreateLobbySettings = ({
     } catch (error) {
       console.error(error);
     }
+    router.back();
   };
   // For pressing the "Save" button. This action updates the entry that corresponds to the id in defaultSettings.
   // Can be executed if defaultSettings exists (i.e. the id of the settings is in the url)
   // and that the name in creator in defaultSettings is equal to the current user's name
   const updateSettings = trpc.lobby.updateSettings.useMutation();
   const saveSettings: SubmitHandler<ICreateLobbySettings> = async (values) => {
-    // ***** TODO *****
-    // THIS SHOULD ONLY PASS TO CHANGED VALUES TO updateSettings.mutateAsync
-    const dirtyValues = getDirtyValues(formState.dirtyFields, values);
-    console.log(dirtyValues);
+    const dirtyValues = getDirtyValues(dirtyFields, values);
     try {
       if (typeof defaultSettings?.id != 'undefined')
         await updateSettings.mutateAsync({
           ...dirtyValues,
           id: defaultSettings?.id,
+          creatorId: defaultSettings?.creator.id,
         });
     } catch (error) {
       console.error(error);
     }
+    router.back();
   };
 
   // ========== CAR MODELS ==========
@@ -229,10 +233,13 @@ const CreateLobbySettings = ({
         {/* <pre>{JSON.stringify(formState, null, 2)}</pre> */}
         <Widget header="Create Lobby Settings" className="w-full">
           <div className="flex flex-col">
+            <h3 className="text-slate-500">
+              Original curator: {defaultSettings?.creator.name}
+            </h3>
             <form>
               {/* ===== TITLE ===== */}
               <label
-                className={formState.dirtyFields.title ? 'text-amber-300' : ''}
+                className={dirtyFields.title ? 'text-amber-300' : ''}
                 htmlFor="title"
               >
                 title:
@@ -243,9 +250,7 @@ const CreateLobbySettings = ({
               {/* ===== DESCRIPTION ===== */}
               <label
                 htmlFor="description"
-                className={
-                  formState.dirtyFields.description ? 'text-amber-300' : ''
-                }
+                className={dirtyFields.description ? 'text-amber-300' : ''}
               >
                 description:
               </label>
@@ -259,9 +264,7 @@ const CreateLobbySettings = ({
               {/* ===== CHOOSE CAR MODELS ===== */}
               <Button
                 text="Choose Cars"
-                className={
-                  formState.dirtyFields.allowedCars ? 'text-amber-300' : ''
-                }
+                className={dirtyFields.allowedCars ? 'text-amber-300' : ''}
                 onClick={() => {
                   setModelSelectModal(true);
                 }}
@@ -273,7 +276,7 @@ const CreateLobbySettings = ({
                 <Fragment key={index}>
                   <Button
                     className={
-                      formState.dirtyFields.allowedCars &&
+                      dirtyFields.allowedCars &&
                       (isNewlySelectedModel(model.carModelId) ||
                         isTuningSheetChanged(
                           model.carModelId,
@@ -307,9 +310,7 @@ const CreateLobbySettings = ({
               ))}
 
               {/* ===== TRACK SELECTION ===== */}
-              <legend
-                className={formState.dirtyFields.tracks ? 'text-amber-300' : ''}
-              >
+              <legend className={dirtyFields.tracks ? 'text-amber-300' : ''}>
                 Choose Tracks:
               </legend>
               <div>
@@ -334,10 +335,12 @@ const CreateLobbySettings = ({
                                 ),
                               );
                             } else {
-                              setSelectedTrackLayouts((prevState) => [
-                                ...prevState,
-                                layout,
-                              ]);
+                              setSelectedTrackLayouts((prevState) => {
+                                // this needs to be sort because array dirtyFields differentiates ["supra", "r34"] from ["r34", "supra"]
+                                return [...prevState, layout].sort((a, b) =>
+                                  sortObjectByStringCallback(a, b, 'name'),
+                                );
+                              });
                             }
                           }}
                         />
@@ -352,22 +355,20 @@ const CreateLobbySettings = ({
               <h3>optional:</h3>
               {/* TO DO: Make these fields actually optional as the form requires them to be filled before submitting */}
               {/* ===== TAGS ===== */}
-              <legend
-                className={formState.dirtyFields.tags ? 'text-amber-300' : ''}
-              >
+              <legend className={dirtyFields.tags ? 'text-amber-300' : ''}>
                 Choose Tags:
               </legend>
               <div>
-                {Object.keys(lobbyTags).map((v, index) => {
+                {Object.keys(lobbyTags).map((value, index) => {
                   return (
                     <Fragment key={index}>
                       <input
-                        id={v}
+                        id={value}
                         type="checkbox"
-                        value={v}
+                        value={value}
                         {...register('tags')}
                       />
-                      <label htmlFor={v}>{camelCaseToWords(v)}</label>
+                      <label htmlFor={value}>{camelCaseToWords(value)}</label>
                       <br />
                     </Fragment>
                   );
@@ -375,11 +376,7 @@ const CreateLobbySettings = ({
               </div>
 
               {/* ===== GR RATING ===== */}
-              <legend
-                className={
-                  formState.dirtyFields.grRating ? 'text-amber-300' : ''
-                }
-              >
+              <legend className={dirtyFields.grRating ? 'text-amber-300' : ''}>
                 GR Rating:
               </legend>
               <div>
@@ -403,9 +400,7 @@ const CreateLobbySettings = ({
               {/* ===== PP RATING ===== */}
               <label
                 htmlFor="ppRating"
-                className={
-                  formState.dirtyFields.ppRating ? 'text-amber-300' : ''
-                }
+                className={dirtyFields.ppRating ? 'text-amber-300' : ''}
               >
                 ppRating:
               </label>
@@ -419,9 +414,7 @@ const CreateLobbySettings = ({
               {/* ===== MAX POWER ===== */}
               <label
                 htmlFor="maxPower"
-                className={
-                  formState.dirtyFields.maxPower ? 'text-amber-300' : ''
-                }
+                className={dirtyFields.maxPower ? 'text-amber-300' : ''}
               >
                 maxPower:
               </label>
@@ -435,9 +428,7 @@ const CreateLobbySettings = ({
               {/* ===== MINIMUM WEIGHT ===== */}
               <label
                 htmlFor="minimumWeight"
-                className={
-                  formState.dirtyFields.minimumWeight ? 'text-amber-300' : ''
-                }
+                className={dirtyFields.minimumWeight ? 'text-amber-300' : ''}
               >
                 minimumWeight:
               </label>
@@ -460,7 +451,7 @@ const CreateLobbySettings = ({
               <Button text="New" onClick={handleSubmit(newSettings)} />
 
               {defaultSettings?.creator.name === session?.user?.name &&
-                formState.isDirty && (
+                isDirty && (
                   <Button text="Save" onClick={handleSubmit(saveSettings)} />
                 )}
             </form>

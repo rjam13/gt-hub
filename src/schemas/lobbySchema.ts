@@ -33,6 +33,8 @@ export const updateLobbySettingsSchema = createLobbySettingsSchema
   .partial()
   .extend({
     id: z.string(),
+    // needs the creatorId so that only the creator can update the lobbySettings
+    creatorId: z.string(),
   });
 
 // export const getLobbySettingsInputSchema = z.object({
