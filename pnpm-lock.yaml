@@ -9,8 +9,8 @@ overrides:
 
 dependencies:
   '@hookform/resolvers':
-    specifier: ^3.1.0
-    version: 3.1.0(react-hook-form@7.43.9)
+    specifier: ^3.3.2
+    version: 3.3.2(react-hook-form@7.43.9)
   '@next-auth/prisma-adapter':
     specifier: ^1.0.6
     version: 1.0.6(@prisma/client@5.1.0)(next-auth@4.22.1)
@@ -635,8 +635,8 @@ packages:
       '@hapi/hoek': 9.3.0
     dev: true
 
-  /@hookform/resolvers@3.1.0(react-hook-form@7.43.9):
-    resolution: {integrity: sha512-z0A8K+Nxq+f83Whm/ajlwE6VtQlp/yPHZnXw7XWVPIGm1Vx0QV8KThU3BpbBRfAZ7/dYqCKKBNnQh85BkmBKkA==}
+  /@hookform/resolvers@3.3.2(react-hook-form@7.43.9):
+    resolution: {integrity: sha512-Tw+GGPnBp+5DOsSg4ek3LCPgkBOuOgS5DsDV7qsWNH9LZc433kgsWICjlsh2J9p04H2K66hsXPPb9qn9ILdUtA==}
     peerDependencies:
       react-hook-form: ^7.0.0
     dependencies:
